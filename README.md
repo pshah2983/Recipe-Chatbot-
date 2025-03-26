@@ -111,6 +111,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Recipe dataset provided by [source]
-- Icons and UI elements from [source]
+- Recipe dataset provided by Kaggle
 - Special thanks to contributors and maintainers 
