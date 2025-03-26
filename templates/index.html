@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuisine Chatbot</title>
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8f9fa;
+            --text-color: #333333;
+            --border-color: #dee2e6;
+            --accent-color: #2c3e50;
+            --hover-color: #34495e;
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --border-color: #404040;
+            --accent-color: #4a90e2;
+            --hover-color: #357abd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--secondary-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .chat-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--primary-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+
+        .chat-header {
+            background: var(--accent-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            right: 60px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            background: var(--accent-color);
+            color: white;
+            align-self: flex-end;
+        }
+
+        .message.bot {
+            background: var(--secondary-bg);
+            color: var(--text-color);
+            align-self: flex-start;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: var(--secondary-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: typing 1s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            background: var(--primary-bg);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            background: var(--primary-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: var(--hover-color);
+        }
+
+        .voice-input {
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Recipe styling updates */
+        .recipe-list {
+            background: var(--primary-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .cuisine-section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .cuisine-title {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        .diet-section {
+            margin: 15px 0;
+        }
+
+        .diet-title {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .recipe-list-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .recipe-list-item {
+            display: flex;
+            background: var(--secondary-bg);
+            padding: 15px;
+            border-radius: 8px;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .recipe-list-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .recipe-number {
+            min-width: 30px;
+            font-weight: bold;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .recipe-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .recipe-list-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .recipe-list-info strong {
+            font-size: 1.1em;
+            color: var(--text-color);
+        }
+
+        .recipe-course {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .recipe-instruction {
+            margin-top: 20px;
+            padding: 10px;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .recipe-details {
+            background: var(--primary-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .recipe-title {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .recipe-image {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .recipe-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            max-height: 400px;
+            object-fit: contain;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .recipe-section {
+            margin: 25px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .recipe-section:last-child {
+            border-bottom: none;
+        }
+
+        .recipe-section-title {
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+
+        .recipe-info-list, .ingredients-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .recipe-info-list li, .ingredients-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .recipe-info-list li:before, .ingredients-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        .instructions-list {
+            padding-left: 20px;
+        }
+
+        .instructions-list li {
+            margin-bottom: 12px;
+        }
+
+        .recipe-description {
+            line-height: 1.6;
+        }
+
+        /* Help information styling */
+        .help-info {
+            background: var(--primary-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+            margin: 10px 0;
+        }
+
+        .help-info h3 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .help-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .help-info li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .help-info li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        .help-info p {
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        /* Slideshow styles */
+        .recipe-slideshow {
+            position: relative;
+            margin: 15px 0;
+        }
+
+        .slide {
+            display: none;
+            padding: 20px;
+            background: var(--secondary-bg);
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .slide.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .slideshow-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .slideshow-nav button {
+            padding: 5px 10px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .help-tooltip {
+            position: absolute;
+            right: 20px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            color: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .help-content {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            width: 300px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .help-content.show {
+            display: block;
+        }
+
+        .help-content h3 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .help-content ul {
+            list-style: none;
+        }
+
+        .help-content li {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .help-content .example {
+            font-style: italic;
+            color: var(--accent-color);
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Navigation styles */
+        .nav-bar {
+            background: var(--accent-color);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: var(--hover-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info span {
+            color: white;
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        </div>
+        <div class="user-info" id="user-info">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🍳 Cuisine Chatbot</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+            <div class="help-tooltip" onclick="toggleHelp()">?</div>
+            <div class="help-content" id="help-content">
+                <h3>What you can ask me:</h3>
+                <ul>
+                    <li>Basic greetings
+                        <div class="example">"hello", "hi", "bye", "thanks"</div>
+                    </li>
+                    <li>Get specific recipes by number
+                        <div class="example">"give me recipe number 3"</div>
+                    </li>
+                    <li>Search by diet type
+                        <div class="example">"show vegetarian recipes", "vegan dishes"</div>
+                    </li>
+                    <li>Search by cuisine
+                        <div class="example">"gujarati recipes", "maharashtrian food"</div>
+                    </li>
+                    <li>Search by ingredients
+                        <div class="example">"recipes with paneer", "dishes containing rice"</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot">
+                Hello! I'm your cuisine assistant. I can help you discover delicious recipes and learn about different cuisines. What would you like to know?
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="chat-input">
+            <button class="voice-input" onclick="toggleVoiceInput()" aria-label="Voice Input">🎤</button>
+            <input type="text" id="user-input" placeholder="Ask about recipes, cuisines, or cooking methods...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', document.body.dataset.theme);
+        }
+
+        // Load saved theme
+        document.body.dataset.theme = localStorage.getItem('theme') || 'light';
+
+        // Voice input
+        let recognition;
+        function toggleVoiceInput() {
+            if (!recognition) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onresult = function(event) {
+                    const text = event.results[0][0].transcript;
+                    document.getElementById('user-input').value = text;
+                    sendMessage();
+                };
+            }
+
+            recognition.start();
+        }
+
+        // Typing animation
+        function showTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'block';
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'none';
+        }
+
+        // Enhanced message sending
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator and add bot message
+                hideTypingIndicator();
+                addMessage(data.response);
+                
+                // Initialize slideshow if present
+                initializeSlideshow();
+            } catch (error) {
+                console.error('Error:', error);
+                hideTypingIndicator();
+                addMessage('Sorry, I encountered an error. Please try again.');
+            }
+        }
+
+        // Slideshow functionality
+        function initializeSlideshow() {
+            const slideshows = document.querySelectorAll('.recipe-slideshow');
+            slideshows.forEach(slideshow => {
+                const slides = slideshow.querySelectorAll('.slide');
+                let currentSlide = 0;
+
+                function showSlide(index) {
+                    slides.forEach(slide => slide.classList.remove('active'));
+                    slides[index].classList.add('active');
+                }
+
+                function nextSlide() {
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    showSlide(currentSlide);
+                }
+
+                function prevSlide() {
+                    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                    showSlide(currentSlide);
+                }
+
+                // Add navigation if more than one slide
+                if (slides.length > 1) {
+                    const nav = document.createElement('div');
+                    nav.className = 'slideshow-nav';
+                    nav.innerHTML = `
+                        <button onclick="prevSlide()">Previous</button>
+                        <button onclick="nextSlide()">Next</button>
+                    `;
+                    slideshow.appendChild(nav);
+                }
+
+                showSlide(0);
+            });
+        }
+
+        // Help tooltip
+        function toggleHelp() {
+            document.getElementById('help-content').classList.toggle('show');
+        }
+
+        // Input handling
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Message display function
+        function addMessage(text, isUser = false) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            // If the message contains HTML (from bot responses), insert it safely
+            if (!isUser && text.includes('<')) {
+                messageDiv.innerHTML = text;
+            } else {
+                messageDiv.textContent = text;
+            }
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html> 

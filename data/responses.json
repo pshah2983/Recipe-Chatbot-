@@ -1,0 +1,66 @@
+[
+    {
+        "question": "hello",
+        "answer": "Hi! I'm your Recipe Assistant. I can help you with recipe recommendations, cooking instructions, ingredient substitutions, and nutritional information. How can I assist you today?"
+    },
+    {
+        "question": "how are you",
+        "answer": "I'm doing well, thank you for asking! How about you?"
+    },
+    {
+        "question": "bye",
+        "answer": "Goodbye! Have a great day!"
+    },
+    {
+        "question": "what can you do",
+        "answer": "I can help you with:\n1. Finding recipes based on ingredients or cuisine\n2. Providing cooking instructions\n3. Suggesting ingredient substitutions\n4. Sharing nutritional information\n5. Giving cooking tips and techniques\nWhat would you like to know?"
+    },
+    {
+        "question": "help",
+        "answer": "I can help you with answering questions based on my knowledge base. Just ask me anything, and I'll try to provide the most relevant response."
+    },
+    {
+        "question": "thanks",
+        "answer": "You're welcome! Is there anything else I can help you with?"
+    },
+    {
+        "question": "good morning",
+        "answer": "Good morning! How can I assist you today?"
+    },
+    {
+        "question": "good night",
+        "answer": "Good night! Have a peaceful rest!"
+    },
+    {
+        "question": "how to make pasta",
+        "answer": "Here's a basic pasta recipe:\n1. Boil water in a large pot (4-6 quarts)\n2. Add salt to the water (about 1-2 tablespoons)\n3. Add pasta when water is boiling\n4. Cook according to package instructions (usually 8-12 minutes)\n5. Drain pasta, reserving some pasta water\n6. Toss with sauce and serve\nWould you like more specific pasta recipes or variations?"
+    },
+    {
+        "question": "substitute for eggs",
+        "answer": "Here are common egg substitutes:\n1. Flax eggs: 1 tbsp ground flax + 3 tbsp water\n2. Applesauce: 1/4 cup per egg\n3. Mashed banana: 1/4 cup per egg\n4. Silken tofu: 1/4 cup per egg\n5. Yogurt: 1/4 cup per egg\nWhich substitute would you like to know more about?"
+    },
+    {
+        "question": "healthy breakfast ideas",
+        "answer": "Here are some healthy breakfast options:\n1. Overnight oats with fruits\n2. Greek yogurt with granola and berries\n3. Avocado toast with eggs\n4. Smoothie bowl with toppings\n5. Whole grain toast with peanut butter and banana\nWould you like the recipe for any of these?"
+    },
+    {
+        "question": "vegetarian dinner recipes",
+        "answer": "Here are some popular vegetarian dinner options:\n1. Vegetable stir-fry with tofu\n2. Lentil curry\n3. Mushroom risotto\n4. Black bean enchiladas\n5. Chickpea curry\nWould you like the detailed recipe for any of these dishes?"
+    },
+    {
+        "question": "how to cook rice",
+        "answer": "Here's how to cook perfect rice:\n1. Rinse rice until water runs clear\n2. Use 1.5-2 cups water per cup of rice\n3. Bring to boil, then reduce to simmer\n4. Cover and cook for 18-20 minutes\n5. Let rest for 5 minutes before fluffing\nWould you like specific rice recipes or variations?"
+    },
+    {
+        "question": "substitute for milk",
+        "answer": "Here are common milk substitutes:\n1. Almond milk\n2. Soy milk\n3. Oat milk\n4. Coconut milk\n5. Rice milk\nEach has different properties for cooking. Which would you like to know more about?"
+    },
+    {
+        "question": "quick lunch ideas",
+        "answer": "Here are some quick lunch options:\n1. Mediterranean wrap\n2. Quinoa salad\n3. Tuna pasta salad\n4. Hummus and veggie sandwich\n5. Leftover dinner repurposed\nWould you like the recipe for any of these?"
+    },
+    {
+        "question": "how to make pizza",
+        "answer": "Here's a basic pizza recipe:\n1. Make or buy pizza dough\n2. Preheat oven to 450°F (230°C)\n3. Roll out dough\n4. Add sauce and toppings\n5. Bake for 12-15 minutes\nWould you like the detailed recipe for homemade pizza dough?"
+    }
+] 

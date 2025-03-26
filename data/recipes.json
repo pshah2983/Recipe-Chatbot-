@@ -1,0 +1,94 @@
+{
+    "recipes": [
+        {
+            "name": "Classic Pancakes",
+            "category": "breakfast",
+            "ingredients": [
+                "2 cups all-purpose flour",
+                "2 tablespoons sugar",
+                "2 teaspoons baking powder",
+                "1/2 teaspoon salt",
+                "2 eggs",
+                "1 1/2 cups milk",
+                "1/4 cup melted butter"
+            ],
+            "instructions": [
+                "Mix dry ingredients in a bowl",
+                "In another bowl, whisk eggs and milk",
+                "Combine wet and dry ingredients",
+                "Add melted butter and mix until smooth",
+                "Heat a griddle or pan over medium heat",
+                "Pour 1/4 cup batter for each pancake",
+                "Cook until bubbles form, then flip",
+                "Cook until golden brown"
+            ],
+            "nutritional_info": {
+                "calories": "227 per serving",
+                "protein": "7g",
+                "carbohydrates": "28g",
+                "fat": "10g"
+            }
+        },
+        {
+            "name": "Vegetable Stir-Fry",
+            "category": "dinner",
+            "ingredients": [
+                "2 tablespoons vegetable oil",
+                "1 onion, sliced",
+                "2 cloves garlic, minced",
+                "1 bell pepper, sliced",
+                "1 cup broccoli florets",
+                "1 cup carrots, sliced",
+                "1 cup snap peas",
+                "3 tablespoons soy sauce",
+                "1 tablespoon cornstarch",
+                "1/4 cup water"
+            ],
+            "instructions": [
+                "Heat oil in a wok or large skillet",
+                "Add onion and garlic, stir-fry for 2 minutes",
+                "Add vegetables and stir-fry for 5-7 minutes",
+                "Mix soy sauce, cornstarch, and water",
+                "Add sauce to vegetables",
+                "Cook until sauce thickens"
+            ],
+            "nutritional_info": {
+                "calories": "150 per serving",
+                "protein": "4g",
+                "carbohydrates": "12g",
+                "fat": "8g"
+            }
+        },
+        {
+            "name": "Chocolate Chip Cookies",
+            "category": "dessert",
+            "ingredients": [
+                "2 1/4 cups all-purpose flour",
+                "1 cup butter, softened",
+                "3/4 cup sugar",
+                "3/4 cup brown sugar",
+                "2 eggs",
+                "1 teaspoon vanilla extract",
+                "1 teaspoon baking soda",
+                "1/2 teaspoon salt",
+                "2 cups chocolate chips"
+            ],
+            "instructions": [
+                "Preheat oven to 375°F (190°C)",
+                "Cream butter and sugars",
+                "Beat in eggs and vanilla",
+                "Mix dry ingredients separately",
+                "Combine wet and dry ingredients",
+                "Stir in chocolate chips",
+                "Drop rounded tablespoons onto baking sheets",
+                "Bake for 9-11 minutes"
+            ],
+            "nutritional_info": {
+                "calories": "150 per cookie",
+                "protein": "2g",
+                "carbohydrates": "19g",
+                "fat": "8g"
+            }
+        }
+    ]
+} 
