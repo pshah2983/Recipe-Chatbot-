@@ -21,6 +21,8 @@
             --border-color: #404040;
             --accent-color: #4a90e2;
             --hover-color: #357abd;
+            --recipe-bg: #333333;
+            --recipe-hover: #404040;
         }
 
         * {
@@ -100,8 +102,9 @@
         }
 
         .message.bot {
-            background: var(--secondary-bg);
+            background: var(--recipe-bg);
             color: var(--text-color);
+            border: 1px solid var(--border-color);
             align-self: flex-start;
         }
 
@@ -186,83 +189,84 @@
             margin: 10px 0;
         }
 
-        .cuisine-section {
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-        }
-
-        .cuisine-title {
-            color: var(--accent-color);
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 5px;
-            display: inline-block;
-        }
-
-        .diet-section {
-            margin: 15px 0;
-        }
-
-        .diet-title {
-            color: var(--text-color);
-            margin-bottom: 10px;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
         .recipe-list-items {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
         }
 
         .recipe-list-item {
-            display: flex;
-            background: var(--secondary-bg);
-            padding: 15px;
-            border-radius: 8px;
-            align-items: center;
-            gap: 15px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 8px;
             margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s;
+            cursor: pointer;
         }
 
         .recipe-list-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
         }
 
         .recipe-number {
-            min-width: 30px;
-            font-weight: bold;
-            color: #666;
-            font-size: 1.1em;
+            font-size: 0.9em;
+            color: var(--text-color);
+            margin-bottom: 5px;
         }
 
-        .recipe-thumbnail {
-            width: 80px;
-            height: 80px;
+        .recipe-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .recipe-image img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             border-radius: 4px;
         }
 
         .recipe-list-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            padding: 5px 0;
         }
 
         .recipe-list-info strong {
-            font-size: 1.1em;
+            font-size: 0.9em;
             color: var(--text-color);
+            display: block;
+            margin-bottom: 3px;
+            line-height: 1.2;
         }
 
         .recipe-course {
-            color: #666;
-            font-size: 0.9em;
+            font-size: 0.8em;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .cuisine-section {
+            margin-bottom: 20px;
+        }
+
+        .cuisine-title {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .diet-section {
+            margin-bottom: 15px;
+        }
+
+        .diet-title {
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: var(--text-color);
         }
 
         .recipe-instruction {
@@ -275,37 +279,40 @@
         }
 
         .recipe-details {
-            background: var(--primary-bg);
+            background: var(--bg-primary);
+            border-radius: 12px;
             padding: 20px;
-            border-radius: 8px;
-            margin: 10px 0;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .recipe-title {
+        .recipe-details .recipe-image {
+            width: 100%;
+            max-height: 300px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .recipe-details .recipe-image img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .recipe-details .recipe-title {
             color: var(--accent-color);
+            font-size: 1.5em;
             margin-bottom: 15px;
             text-align: center;
-            font-size: 24px;
-        }
-
-        .recipe-image {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .recipe-image img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            max-height: 400px;
-            object-fit: contain;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .recipe-section {
-            margin: 25px 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
         }
 
         .recipe-section:last-child {
@@ -313,9 +320,14 @@
         }
 
         .recipe-section-title {
-            margin-bottom: 10px;
             color: var(--accent-color);
-            font-size: 18px;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .recipe-description {
+            line-height: 1.6;
+            color: var(--text-color);
         }
 
         .recipe-info-list, .ingredients-list {
@@ -324,7 +336,8 @@
         }
 
         .recipe-info-list li, .ingredients-list li {
-            margin-bottom: 8px;
+            margin: 8px 0;
+            color: var(--text-color);
             padding-left: 20px;
             position: relative;
         }
@@ -337,38 +350,36 @@
         }
 
         .instructions-list {
-            padding-left: 20px;
+            padding-left: 25px;
+            color: var(--text-color);
         }
 
         .instructions-list li {
-            margin-bottom: 12px;
-        }
-
-        .recipe-description {
-            line-height: 1.6;
+            margin: 12px 0;
+            line-height: 1.5;
         }
 
         /* Help information styling */
         .help-info {
-            background: var(--primary-bg);
+            background: var(--recipe-bg);
             padding: 20px;
             border-radius: 8px;
-            border-left: 4px solid var(--accent-color);
             margin: 10px 0;
+            border: 1px solid var(--border-color);
         }
 
         .help-info h3 {
-            color: var(--accent-color);
+            color: var(--text-color);
             margin-bottom: 15px;
-            font-size: 18px;
         }
 
         .help-info ul {
-            list-style: none;
+            list-style-type: none;
             padding-left: 0;
         }
 
         .help-info li {
+            color: var(--text-color);
             margin-bottom: 10px;
             padding-left: 20px;
             position: relative;
@@ -382,8 +393,8 @@
         }
 
         .help-info p {
+            color: var(--text-color);
             margin-top: 15px;
-            font-style: italic;
         }
 
         /* Slideshow styles */
@@ -525,6 +536,118 @@
             background: white;
             color: var(--accent-color);
         }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: var(--bg-primary);
+            margin: 5% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .close-modal:hover {
+            color: var(--accent-color);
+        }
+
+        .recipe-header {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .recipe-image-container {
+            flex: 0 0 200px;
+        }
+
+        .recipe-header-image {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .recipe-header-info {
+            flex: 1;
+        }
+
+        .recipe-header-info .recipe-title {
+            margin: 0 0 10px 0;
+            color: var(--accent-color);
+            font-size: 1.5em;
+        }
+
+        .basic-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .basic-info p {
+            margin: 0;
+            color: var(--text-color);
+            font-size: 0.9em;
+        }
+
+        .basic-info strong {
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 600px) {
+            .recipe-header {
+                flex-direction: column;
+            }
+
+            .recipe-image-container {
+                width: 100%;
+            }
+
+            .recipe-header-image {
+                width: 100%;
+                height: 200px;
+            }
+
+            .basic-info {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -578,6 +701,20 @@
             <button class="voice-input" onclick="toggleVoiceInput()" aria-label="Voice Input">🎤</button>
             <input type="text" id="user-input" placeholder="Ask about recipes, cuisines, or cooking methods...">
             <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <img id="modalImage" class="modal-image" src="" alt="Recipe Image">
+            <div class="recipe-details">
+                <h3 id="modalTitle"></h3>
+                <p id="modalDescription"></p>
+                <p id="modalCuisine"></p>
+                <p id="modalDiet"></p>
+                <p id="modalPrepTime"></p>
+            </div>
         </div>
     </div>
 
@@ -720,6 +857,53 @@
             
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Add modal functionality
+        const modal = document.getElementById('recipeModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalCuisine = document.getElementById('modalCuisine');
+        const modalDiet = document.getElementById('modalDiet');
+        const modalPrepTime = document.getElementById('modalPrepTime');
+        const closeModal = document.querySelector('.close-modal');
+
+        function showRecipeDetails(recipe) {
+            modalImage.src = recipe.image;
+            modalTitle.textContent = recipe.name;
+            modalDescription.textContent = recipe.description;
+            modalCuisine.textContent = `Cuisine: ${recipe.cuisine}`;
+            modalDiet.textContent = `Diet: ${recipe.diet}`;
+            modalPrepTime.textContent = `Preparation Time: ${recipe.prep_time}`;
+            modal.style.display = 'block';
+        }
+
+        closeModal.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Update the recipe card click handler
+        function createRecipeCard(recipe) {
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.innerHTML = `
+                <img src="${recipe.image}" alt="${recipe.name}" class="recipe-image">
+                <h3>${recipe.name}</h3>
+                <p>${recipe.description}</p>
+                <div class="recipe-meta">
+                    <span class="cuisine-tag">${recipe.cuisine}</span>
+                    <span class="diet-tag">${recipe.diet}</span>
+                </div>
+            `;
+            card.onclick = () => showRecipeDetails(recipe);
+            return card;
         }
     </script>
 </body>

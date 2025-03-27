@@ -17,9 +17,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Instantiate chatbot (make sure your CSV now includes the image_file column)
 chatbot = Chatbot()
 
-# After creating your app and db objects:
+# Initialize Flask-Migrate
 migrate = Migrate(app, db)
 
 # Database Models
@@ -150,13 +151,12 @@ def get_comments(recipe_id):
         } for c in comments]
     })
 
-# Serve static files from image_for_cuisines/data directory
+# Route to serve static images from the image_for_cuisines/data folder.
 @app.route('/static/images/<path:filename>')
 def serve_image(filename):
     return send_from_directory('image_for_cuisines/data', filename)
 
 if __name__ == '__main__':
-    # Create the database tables
     with app.app_context():
-        db.create_all()
-    app.run(debug=True) 
+        db.create_all()  # Create database tables if they don't exist.
+    app.run(debug=True)

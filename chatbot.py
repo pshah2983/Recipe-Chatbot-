@@ -11,6 +11,8 @@ from typing import List, Dict
 import bcrypt
 import json
 from datetime import datetime
+import os
+import glob
 
 class Chatbot:
     def __init__(self, csv_path='cuisines.csv'):
@@ -35,13 +37,16 @@ class Chatbot:
         if 'cooking_time' not in self.df.columns:
             self.df['cooking_time'] = 30  # default value in minutes
         
+        # Initialize recipe number mapping
+        self.recipe_number_mapping = {}
+        
         # Initialize TF-IDF vectorizer with better parameters
         self.vectorizer = TfidfVectorizer(
             stop_words='english',
             ngram_range=(1, 2),  # Use bigrams for better phrase matching
             max_features=5000,   # Reduce features to focus on important terms
-            min_df=2,           # Minimum document frequency
-            max_df=0.95         # Maximum document frequency
+            min_df=2,            # Minimum document frequency
+            max_df=0.95          # Maximum document frequency
         )
         
         # Prepare text data for TF-IDF
@@ -53,18 +58,26 @@ class Chatbot:
         
         # Create response templates
         self.response_templates = {
-            'greeting': ['Hello! I\'m your cuisine assistant. How can I help you today?', 
-                        'Hi there! I can help you discover delicious recipes and cuisines. What would you like to know?',
-                        'Hey! I\'m here to help you explore different cuisines and recipes. What can I tell you about?'],
-            'farewell': ['Goodbye! Enjoy your culinary adventures!', 
-                        'See you later! Happy cooking!', 
-                        'Bye! Feel free to ask more questions about cuisines anytime!'],
-            'thanks': ['You\'re welcome! Let me know if you need more information about cuisines!', 
-                      'No problem! I\'m here to help with any cuisine-related questions!', 
-                      'Glad to help! Feel free to ask more questions!'],
-            'unknown': ['I\'m not sure about that. Could you try asking about specific cuisines, ingredients, or cooking methods?', 
-                       'I don\'t understand. Try asking about recipes, cuisines, or cooking techniques.', 
-                       'I\'m not sure what you mean. You can ask about different cuisines, ingredients, or cooking methods.']
+            'greeting': [
+                "Hello! I'm your cuisine assistant. How can I help you today?",
+                "Hi there! I can help you discover delicious recipes and cuisines. What would you like to know?",
+                "Hey! I'm here to help you explore different cuisines and recipes. What can I tell you about?"
+            ],
+            'farewell': [
+                "Goodbye! Enjoy your culinary adventures!",
+                "See you later! Happy cooking!",
+                "Bye! Feel free to ask more questions about cuisines anytime!"
+            ],
+            'thanks': [
+                "You're welcome! Let me know if you need more information about cuisines!",
+                "No problem! I'm here to help with any cuisine-related questions!",
+                "Glad to help! Feel free to ask more questions!"
+            ],
+            'unknown': [
+                "I'm not sure about that. Could you try asking about specific cuisines, ingredients, or cooking methods?",
+                "I don't understand. Try asking about recipes, cuisines, or cooking techniques.",
+                "I'm not sure what you mean. You can ask about different cuisines, ingredients, or cooking methods."
+            ]
         }
         
         # Store current recipe list for numbered requests
@@ -152,15 +165,39 @@ class Chatbot:
         return top_indices, similarities[top_indices]
 
     def _get_local_image_path(self, row):
-        """Get image path from image_for_cuisines folder using recipe index."""
+        """Get image path for a recipe using the image_file column or recipe index."""
         try:
-            # Get the recipe index (1-based)
-            recipe_idx = row.name + 1
-            # The image filename should be the recipe number
-            image_path = f"/static/images/{recipe_idx}.jpg"
-            return image_path
-        except:
-            # Return a default image if no matching image is found
+            # First try using the image_file column if it exists and has a value
+            if 'image_file' in row.index and pd.notna(row['image_file']):
+                image_filename = str(row['image_file'])
+                if os.path.exists(os.path.join("image_for_cuisines", "data", image_filename)):
+                    return f"/static/images/{image_filename}"
+            
+            # If image_file doesn't work, try using the recipe index
+            recipe_idx = row.name + 1  # Convert to 1-based index
+            possible_extensions = ['.jpg', '.jpeg', '.png']
+            
+            # Try different filename patterns
+            patterns = [
+                f"{recipe_idx}.jpg",  # Simple number.jpg
+                f"{recipe_idx}.*",    # Any extension
+                f"*{row['name'].lower().replace(' ', '_')}*.jpg"  # Recipe name in filename
+            ]
+            
+            for pattern in patterns:
+                # Use glob to find matching files
+                matches = glob.glob(os.path.join("image_for_cuisines", "data", pattern))
+                if matches:
+                    # Get the first matching file
+                    image_path = matches[0]
+                    filename = os.path.basename(image_path)
+                    return f"/static/images/{filename}"
+            
+            # If no image is found, return a default image path
+            return "/static/images/default.jpg"
+        
+        except Exception as e:
+            print(f"Error getting image path for recipe {row['name']}: {str(e)}")
             return "/static/images/default.jpg"
 
     def _format_recipe_list(self, recipes_df):
@@ -169,9 +206,6 @@ class Chatbot:
         cuisines = recipes_df['cuisine'].unique()
         
         response = '<div class="recipe-list">'
-        
-        # Create a mapping of display number to DataFrame index
-        self.recipe_number_mapping = {}  # Store mapping of display numbers to DataFrame indices
         
         for cuisine in cuisines:
             cuisine_recipes = recipes_df[recipes_df['cuisine'] == cuisine]
@@ -195,6 +229,10 @@ class Chatbot:
                         
                         response += f'<div class="recipe-list-item">'
                         response += f'<div class="recipe-number">{recipe_number}</div>'
+                        
+                        # Add recipe image
+                        image_path = self._get_local_image_path(recipe)
+                        response += f'<div class="recipe-image"><img src="{image_path}" alt="{recipe["name"]}" class="recipe-thumbnail"></div>'
                         
                         response += f'<div class="recipe-list-info">'
                         response += f'<strong>{recipe["name"]}</strong>'
@@ -351,7 +389,10 @@ class Chatbot:
             query_parts = original_query.replace(',', ' and ')
             
             # Try to extract ingredients after "with", "containing", or "made with"
-            for pattern in [r'(?:with|containing|made with)\s+(.*?)(?:$|and[\s,])', r'(?:with|containing|made with).*?and\s+(.*?)(?:$|\s+and[\s,])']:
+            for pattern in [
+                r'(?:with|containing|made with)\s+(.*?)(?:$|and[\s,])',
+                r'(?:with|containing|made with).*?and\s+(.*?)(?:$|\s+and[\s,])'
+            ]:
                 matches = re.findall(pattern, original_query)
                 if matches:
                     for match in matches:
@@ -406,16 +447,17 @@ class Chatbot:
         
         # Check for diet-specific queries
         diet_keywords = {
-            'vegetarian': ['vegetarian', 'veg', 'no meat'],
+            'vegetarian': ['vegetarian', 'veg', 'no meat', 'veggie'],
             'vegan': ['vegan', 'plant based', 'no animal'],
-            'non-vegetarian': ['non-vegetarian', 'non veg', 'nonveg', 'meat', 'chicken', 'mutton', 'fish'],
-            'gluten-free': ['gluten free', 'gluten-free', 'no gluten'],
+            'non vegetarian': ['non-vegetarian', 'non veg', 'nonveg', 'meat', 'chicken', 'mutton', 'fish'],
+            'gluten free': ['gluten free', 'gluten-free', 'no gluten'],
             'high protein': ['high protein', 'protein rich', 'protein-rich']
         }
         
         for diet_key, keywords in diet_keywords.items():
             if any(kw in original_query for kw in keywords):
-                diet_matches = self.df[self.df['diet'].str.lower().str.contains(diet_key, na=False)]
+                # Use exact matching for diet field
+                diet_matches = self.df[self.df['diet'].str.lower() == diet_key.lower()]
                 if not diet_matches.empty:
                     self.current_recipe_list = diet_matches
                     return self._format_recipe_list(diet_matches)
@@ -423,10 +465,12 @@ class Chatbot:
                     return f"I couldn't find any {diet_key} recipes. Try another dietary preference."
         
         # Check for cuisine-specific queries
-        common_cuisines = ['indian', 'italian', 'chinese', 'mexican', 'thai', 'japanese', 'french', 
-                          'greek', 'spanish', 'moroccan', 'lebanese', 'turkish', 'american', 'british',
-                          'punjabi', 'bengali', 'gujarati', 'south indian', 'north indian', 'maharashtrian',
-                          'kerala', 'tamil', 'andhra', 'rajasthani', 'kashmiri', 'goan']
+        common_cuisines = [
+            'indian', 'italian', 'chinese', 'mexican', 'thai', 'japanese', 'french',
+            'greek', 'spanish', 'moroccan', 'lebanese', 'turkish', 'american', 'british',
+            'punjabi', 'bengali', 'gujarati', 'south indian', 'north indian', 'maharashtrian',
+            'kerala', 'tamil', 'andhra', 'rajasthani', 'kashmiri', 'goan'
+        ]
         
         for cuisine in common_cuisines:
             if cuisine in original_query:
@@ -455,7 +499,7 @@ class Chatbot:
                 else:
                     return f"I couldn't find any {course_key} recipes. Try another meal type."
         
-        # Check for ingredient queries (single ingredient)
+        # Check for single-ingredient queries
         if any(word in original_query for word in ['ingredient', 'ingredients', 'contains', 'made with', 'using', 'with']):
             # Try to extract the ingredient name
             ingredient_patterns = [
@@ -498,7 +542,10 @@ class Chatbot:
                 # Return a general recommendation
                 random_recipes = self.df.sample(min(10, len(self.df)))
                 self.current_recipe_list = random_recipes
-                return "I'm not sure exactly what you're looking for, but here are some recipes you might like:" + self._format_recipe_list(random_recipes)
+                return (
+                    "I'm not sure exactly what you're looking for, but here are some recipes you might like:"
+                    + self._format_recipe_list(random_recipes)
+                )
             else:
                 return np.random.choice(self.response_templates['unknown'])
         
@@ -523,4 +570,44 @@ class Chatbot:
             <p>Try asking about specific cuisines or ingredients you're interested in!</p>
         </div>
         """
-        return help_text 
+        return help_text
+
+    def _format_recipe(self, recipe):
+        """Format a single recipe for display."""
+        image_path = self._get_local_image_path(recipe)
+        
+        formatted_recipe = f"""
+        <div class='recipe-details'>
+            <div class='recipe-header'>
+                <div class='recipe-image-container'>
+                    <img src='{image_path}' alt='{recipe['name']}' class='recipe-header-image'>
+                </div>
+                <div class='recipe-header-info'>
+                    <h2 class='recipe-title'>{recipe['name']}</h2>
+                    <div class='basic-info'>
+                        <p><strong>Cuisine:</strong> {recipe['cuisine']}</p>
+                        <p><strong>Course:</strong> {recipe['course']}</p>
+                        <p><strong>Diet:</strong> {recipe['diet']}</p>
+                        <p><strong>Preparation Time:</strong> {recipe['prep_time']}</p>
+                    </div>
+                </div>
+            </div>
+            <div class='recipe-section'>
+                <h3 class='recipe-section-title'>Description</h3>
+                <p class='recipe-description'>{recipe['description']}</p>
+            </div>
+            <div class='recipe-section'>
+                <h3 class='recipe-section-title'>Ingredients</h3>
+                <ul class='ingredients-list'>
+                    {self._format_ingredients(recipe['ingredients'])}
+                </ul>
+            </div>
+            <div class='recipe-section'>
+                <h3 class='recipe-section-title'>Instructions</h3>
+                <ol class='instructions-list'>
+                    {self._format_instructions(recipe['instructions'])}
+                </ol>
+            </div>
+        </div>
+        """
+        return formatted_recipe
