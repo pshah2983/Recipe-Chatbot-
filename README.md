@@ -178,6 +178,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-- Recipe data sourced from various Indian cuisine collections
+- Recipe data sourced from various Indian cuisine collections (via Kaggle)
 - Image dataset curated from authentic Indian recipe sources
-- Special thanks to contributors and recipe authors 
+- Special thanks to contributors, maintainers, and recipe authors
