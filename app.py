@@ -51,8 +51,16 @@ def load_user(user_id):
 
 # Routes
 @app.route('/')
-def home():
+def chat_page():
     return render_template('index.html')
+
+@app.route('/homepage')
+def homepage():
+    chat_history = []
+    if current_user.is_authenticated:
+        # Load chat history from session or database (for demo, use session)
+        chat_history = session.get('chat_history', [])
+    return render_template('home.html', chat_history=chat_history)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -93,7 +101,8 @@ def logout():
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json.get('message', '')
-    response = chatbot.get_response(user_message)
+    user_name = current_user.username if current_user.is_authenticated else None
+    response = chatbot.get_response(user_message, user_name=user_name)
     return jsonify({'response': response})
 
 @app.route('/favorite', methods=['POST'])
@@ -155,6 +164,19 @@ def get_comments(recipe_id):
 @app.route('/static/images/<path:filename>')
 def serve_image(filename):
     return send_from_directory('image_for_cuisines/data', filename)
+
+@app.route('/save_chat', methods=['POST'])
+def save_chat():
+    if not current_user.is_authenticated:
+        return ('', 204)
+    chat_history = session.get('chat_history', [])
+    data = request.get_json()
+    chat_history.append({
+        'message': data.get('message', ''),
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M')
+    })
+    session['chat_history'] = chat_history[-20:]  # Keep only last 20 messages
+    return ('', 204)
 
 if __name__ == '__main__':
     with app.app_context():

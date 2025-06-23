@@ -43,6 +43,13 @@ async function sendMessage() {
         console.error('Error:', error);
         addMessage('Sorry, I encountered an error. Please try again.');
     }
+    
+    // Save chat to session for history (if logged in)
+    fetch('/save_chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message })
+    });
 }
 
 // Handle Enter key
@@ -50,4 +57,4 @@ document.getElementById('user-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         sendMessage();
     }
-}); 
+});

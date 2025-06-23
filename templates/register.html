@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Cuisine Chatbot</title>
+    <title>Register - Indian Cuisine Chatbot</title>
+    <link rel="stylesheet" href="/static/css/style.css">
     <style>
         :root {
             --primary-bg: #ffffff;
@@ -23,21 +24,12 @@
             --hover-color: #357abd;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: Arial, sans-serif;
             background: var(--secondary-bg);
             color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
         .nav-bar {
@@ -48,7 +40,7 @@
             align-items: center;
             width: 100%;
             max-width: 1000px;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
             border-radius: 10px;
         }
 
@@ -70,18 +62,18 @@
         }
 
         .register-container {
-            background: var(--primary-bg);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 100%;
             max-width: 400px;
+            margin: 60px auto;
+            background: var(--primary-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 40px 32px 32px 32px;
         }
 
-        .register-container h2 {
+        h2 {
+            color: var(--accent-color);
             text-align: center;
-            margin-bottom: 20px;
-            color: var(--text-color);
+            margin-bottom: 24px;
         }
 
         .form-group {
@@ -90,28 +82,30 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             color: var(--text-color);
         }
 
         .form-group input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid var(--border-color);
-            border-radius: 5px;
+            border-radius: 6px;
             background: var(--primary-bg);
             color: var(--text-color);
         }
 
         .submit-btn {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: var(--accent-color);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            font-size: 1rem;
+            margin-top: 10px;
+            transition: background 0.3s;
         }
 
         .submit-btn:hover {
@@ -138,18 +132,24 @@
         .login-link a:hover {
             text-decoration: underline;
         }
+
+        .theme-toggle {
+            float: right;
+            margin-top: -40px;
+        }
     </style>
 </head>
 <body>
     <div class="nav-bar">
         <div class="nav-links">
-            <a href="/">Home</a>
+            <a href="/homepage">Home</a>
+            <a href="/">Chat</a>
             <a href="/login">Login</a>
             <a href="/register">Register</a>
         </div>
     </div>
-
     <div class="register-container">
+        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
         <h2>Register</h2>
         <div class="error-message" id="error-message"></div>
         <form id="register-form">
@@ -175,8 +175,12 @@
             Already have an account? <a href="/login">Login here</a>
         </div>
     </div>
-
     <script>
+        function toggleTheme() {
+            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', document.body.dataset.theme);
+        }
+        document.body.dataset.theme = localStorage.getItem('theme') || 'light';
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -184,13 +188,11 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const errorMessage = document.getElementById('error-message');
-
             if (password !== confirmPassword) {
                 errorMessage.textContent = 'Passwords do not match';
                 errorMessage.style.display = 'block';
                 return;
             }
-
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
@@ -199,9 +201,7 @@
                     },
                     body: JSON.stringify({ username, email, password }),
                 });
-
                 const data = await response.json();
-
                 if (data.success) {
                     window.location.href = '/login';
                 } else {
@@ -215,4 +215,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

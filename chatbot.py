@@ -13,6 +13,9 @@ import json
 from datetime import datetime
 import os
 import glob
+import spacy
+from sentence_transformers import SentenceTransformer
+from themealdb_client import TheMealDBClient
 
 class Chatbot:
     def __init__(self, csv_path='cuisines.csv'):
@@ -55,6 +58,12 @@ class Chatbot:
         
         # Fit TF-IDF
         self.tfidf_matrix = self.vectorizer.fit_transform(self.combined_text)
+        
+        # NLU and semantic search setup
+        self.spacy_nlp = spacy.load('en_core_web_sm')
+        self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.recipe_embeddings = self.sentence_model.encode(self.combined_text, show_progress_bar=False)
+        self.themealdb = TheMealDBClient()
         
         # Create response templates
         self.response_templates = {
@@ -161,6 +170,18 @@ class Chatbot:
         similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         
         # Get top k matches
+        top_indices = np.argsort(similarities)[-top_k:][::-1]
+        return top_indices, similarities[top_indices]
+
+    def extract_intent_entities(self, query):
+        doc = self.spacy_nlp(query)
+        entities = [(ent.label_, ent.text) for ent in doc.ents]
+        return entities
+
+    def semantic_search(self, query, top_k=3):
+        query_emb = self.sentence_model.encode([query])[0]
+        similarities = np.dot(self.recipe_embeddings, query_emb) / (
+            np.linalg.norm(self.recipe_embeddings, axis=1) * np.linalg.norm(query_emb) + 1e-8)
         top_indices = np.argsort(similarities)[-top_k:][::-1]
         return top_indices, similarities[top_indices]
 
@@ -351,14 +372,23 @@ class Chatbot:
         difficulty = difficulty.lower()
         return self.df[self.df['difficulty'].str.lower() == difficulty].to_dict('records')
 
-    def get_response(self, user_message):
-        """Get response for user message with enhanced processing."""
-        # Preprocess query
-        processed_query = self._preprocess_query(user_message)
-        original_query = user_message.lower()
+    def get_response(self, user_query, user_name=None):
+        """Get response for user message with enhanced processing and personalization."""
+        # Try TheMealDB API first for broader coverage
+        api_results = self.themealdb.search_by_name(user_query)
+        if api_results:
+            meal = api_results[0]
+            greeting = f"{user_name}, here's a recipe from TheMealDB!" if user_name else "Here's a recipe from TheMealDB!"
+            return f"{greeting}<br><b>{meal['strMeal']}</b><br>Category: {meal['strCategory']}<br>Instructions: {meal['strInstructions']}"
         
-        # Check for basic interactions first
+        # Preprocess query
+        processed_query = self._preprocess_query(user_query)
+        original_query = user_query.lower()
+        
+        # Personalized greetings
         if any(word in original_query for word in ['hello', 'hi', 'hey']):
+            if user_name:
+                return f"Hello, {user_name}! How can I help you today?"
             return np.random.choice(self.response_templates['greeting'])
         elif any(word in original_query for word in ['bye', 'goodbye', 'see you']):
             return np.random.choice(self.response_templates['farewell'])
@@ -551,7 +581,10 @@ class Chatbot:
         
         # Get the best match and return formatted response
         best_match = self.df.iloc[top_indices[0]]
-        return self._format_response(best_match)
+        response = self._format_response(best_match)
+        if user_name:
+            response = f"<b>{user_name}, here's a recipe you might like:</b><br>" + response
+        return response
     
     def _get_help_info(self):
         """Return help information about what the chatbot can do."""
