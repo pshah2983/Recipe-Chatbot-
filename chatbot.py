@@ -373,18 +373,10 @@ class Chatbot:
         return self.df[self.df['difficulty'].str.lower() == difficulty].to_dict('records')
 
     def get_response(self, user_query, user_name=None):
-        """Get response for user message with enhanced processing and personalization."""
-        # Try TheMealDB API first for broader coverage
-        api_results = self.themealdb.search_by_name(user_query)
-        if api_results:
-            meal = api_results[0]
-            greeting = f"{user_name}, here's a recipe from TheMealDB!" if user_name else "Here's a recipe from TheMealDB!"
-            return f"{greeting}<br><b>{meal['strMeal']}</b><br>Category: {meal['strCategory']}<br>Instructions: {meal['strInstructions']}"
-        
-        # Preprocess query
-        processed_query = self._preprocess_query(user_query)
+        """Get response for user message with enhanced processing and personalization. Always try TheMealDB API first for recipe queries, then fall back to local CSV, and indicate data source."""
         original_query = user_query.lower()
-        
+        processed_query = self._preprocess_query(user_query)
+
         # Personalized greetings
         if any(word in original_query for word in ['hello', 'hi', 'hey']):
             if user_name:
@@ -394,122 +386,32 @@ class Chatbot:
             return np.random.choice(self.response_templates['farewell'])
         elif any(word in original_query for word in ['thanks', 'thank you']):
             return np.random.choice(self.response_templates['thanks'])
-        
+
         # Check for help request
         if 'help' in original_query or 'what can you do' in original_query:
             return self._get_help_info()
-        
-        # Check for numbered recipe request first
+
+        # Check for numbered recipe request first (local only)
         number_match = re.search(r'(number|recipe)\s*[#]?\s*(\d+)', original_query)
         if number_match:
             try:
                 recipe_number = int(number_match.group(2))
-                # First try to get the recipe directly from the DataFrame
                 if 1 <= recipe_number <= len(self.df):
                     recipe = self.df.iloc[recipe_number - 1]
-                    return self._format_response(recipe)
+                    return self._format_response(recipe) + '<br><i>(From local recipe database)</i>'
                 else:
                     return f"Sorry, I couldn't find recipe number {recipe_number}. Please try a number between 1 and {len(self.df)}."
             except (ValueError, IndexError):
                 return "Sorry, I couldn't find that recipe number. Please try again with a valid recipe number."
-        
-        # Check for multi-ingredient search
-        if ('recipes with' in original_query or 'dishes with' in original_query or 'containing' in original_query or 'made with' in original_query) and ('and' in original_query):
-            ingredients = []
-            query_parts = original_query.replace(',', ' and ')
-            
-            # Try to extract ingredients after "with", "containing", or "made with"
-            for pattern in [
-                r'(?:with|containing|made with)\s+(.*?)(?:$|and[\s,])',
-                r'(?:with|containing|made with).*?and\s+(.*?)(?:$|\s+and[\s,])'
-            ]:
-                matches = re.findall(pattern, original_query)
-                if matches:
-                    for match in matches:
-                        ingredients.extend([ing.strip() for ing in match.split('and')])
-            
-            # If no matches were found with the above patterns, try a simpler approach
-            if not ingredients:
-                keywords = ['with', 'containing', 'made with']
-                for keyword in keywords:
-                    if keyword in original_query:
-                        parts = original_query.split(keyword, 1)[1].split('and')
-                        ingredients.extend([ing.strip() for ing in parts])
-                        break
-            
-            if ingredients:
-                # Clean up ingredients list
-                ingredients = [ing.strip() for ing in ingredients if ing.strip()]
-                matches = self.multi_ingredient_search(ingredients)
-                if matches:
-                    self.current_recipe_list = pd.DataFrame(matches)
-                    return self._format_recipe_list(self.current_recipe_list)
-                else:
-                    return f"I couldn't find any recipes containing {', '.join(ingredients)}. Try other ingredients or a broader search."
-        
-        # Check for cooking time queries
-        time_match = re.search(r'(\d+)\s*(?:minute|minutes|min|mins)', original_query)
-        if time_match and any(word in original_query for word in ['quick', 'under', 'less than']):
-            max_time = int(time_match.group(1))
-            matches = self.search_by_cooking_time(max_time)
-            if matches:
-                self.current_recipe_list = pd.DataFrame(matches)
-                return self._format_recipe_list(self.current_recipe_list)
-            else:
-                return f"I couldn't find recipes that can be prepared in under {max_time} minutes. Try a longer time duration."
-        
-        # Check for difficulty level queries
-        difficulty_levels = ['easy', 'medium', 'hard', 'simple', 'difficult', 'beginner', 'advanced']
-        for level in difficulty_levels:
-            if level in original_query:
-                # Map similar terms to the standardized difficulty levels
-                if level == 'simple' or level == 'beginner':
-                    level = 'easy'
-                elif level == 'difficult' or level == 'advanced':
-                    level = 'hard'
-                
-                matches = self.search_by_difficulty(level)
-                if matches:
-                    self.current_recipe_list = pd.DataFrame(matches)
-                    return self._format_recipe_list(self.current_recipe_list)
-                else:
-                    return f"I couldn't find any {level} recipes. Try another difficulty level."
-        
-        # Check for diet-specific queries
-        diet_keywords = {
-            'vegetarian': ['vegetarian', 'veg', 'no meat', 'veggie'],
-            'vegan': ['vegan', 'plant based', 'no animal'],
-            'non vegetarian': ['non-vegetarian', 'non veg', 'nonveg', 'meat', 'chicken', 'mutton', 'fish'],
-            'gluten free': ['gluten free', 'gluten-free', 'no gluten'],
-            'high protein': ['high protein', 'protein rich', 'protein-rich']
-        }
-        
-        for diet_key, keywords in diet_keywords.items():
-            if any(kw in original_query for kw in keywords):
-                # Use exact matching for diet field
-                diet_matches = self.df[self.df['diet'].str.lower() == diet_key.lower()]
-                if not diet_matches.empty:
-                    self.current_recipe_list = diet_matches
-                    return self._format_recipe_list(diet_matches)
-                else:
-                    return f"I couldn't find any {diet_key} recipes. Try another dietary preference."
-        
-        # Check for cuisine-specific queries
+
+        # --- Improved cuisine and course (meal type) handling ---
+        # Detect cuisine and course/meal type in the query
         common_cuisines = [
             'indian', 'italian', 'chinese', 'mexican', 'thai', 'japanese', 'french',
             'greek', 'spanish', 'moroccan', 'lebanese', 'turkish', 'american', 'british',
             'punjabi', 'bengali', 'gujarati', 'south indian', 'north indian', 'maharashtrian',
             'kerala', 'tamil', 'andhra', 'rajasthani', 'kashmiri', 'goan'
         ]
-        
-        for cuisine in common_cuisines:
-            if cuisine in original_query:
-                cuisine_matches = self.df[self.df['cuisine'].str.lower().str.contains(cuisine, na=False)]
-                if not cuisine_matches.empty:
-                    self.current_recipe_list = cuisine_matches
-                    return self._format_recipe_list(cuisine_matches)
-        
-        # Check for course-specific queries
         course_keywords = {
             'breakfast': ['breakfast', 'morning meal'],
             'lunch': ['lunch', 'midday meal'],
@@ -519,72 +421,225 @@ class Chatbot:
             'appetizer': ['appetizer', 'starter', 'first course'],
             'main course': ['main course', 'main dish', 'entree']
         }
-        
+        found_cuisine = None
+        found_course = None
+        for cuisine in common_cuisines:
+            if cuisine in original_query:
+                found_cuisine = cuisine
+                break
+        for course_key, keywords in course_keywords.items():
+            if any(kw in original_query for kw in keywords):
+                found_course = course_key
+                break
+        # If both cuisine and course are found, try to get recipes for both
+        if found_cuisine:
+            # Try TheMealDB API for cuisine (and course if possible)
+            api_results = self.themealdb.search_by_name(found_cuisine)
+            filtered_api_meals = []
+            if api_results and found_course:
+                # Try to filter API results by course/meal type if possible
+                for meal in api_results:
+                    # TheMealDB uses 'strCategory' for meal type, e.g., 'Breakfast', 'Dessert', etc.
+                    if 'strCategory' in meal and found_course.lower() in meal['strCategory'].lower():
+                        filtered_api_meals.append(meal)
+            if found_course and filtered_api_meals:
+                meal_names = ', '.join([meal['strMeal'] for meal in filtered_api_meals[:5]])
+                greeting = f"{user_name}, here are some {found_cuisine.title()} {found_course.title()} recipes from TheMealDB:" if user_name else f"Here are some {found_cuisine.title()} {found_course.title()} recipes from TheMealDB:"
+                return f"{greeting}<br>{meal_names}<br><i>(From TheMealDB API)</i>"
+            elif api_results:
+                meal_names = ', '.join([meal['strMeal'] for meal in api_results[:5]])
+                greeting = f"{user_name}, here are some {found_cuisine.title()} recipes from TheMealDB:" if user_name else f"Here are some {found_cuisine.title()} recipes from TheMealDB:"
+                return f"{greeting}<br>{meal_names}<br><i>(From TheMealDB API)</i>"
+            # Fallback to local CSV for cuisine and course
+            local_matches = self.df[self.df['cuisine'].str.lower().str.contains(found_cuisine, na=False)]
+            if found_course:
+                local_matches = local_matches[local_matches['course'].str.lower().str.contains(found_course, na=False)]
+            if not local_matches.empty:
+                self.current_recipe_list = local_matches
+                label = f"{found_cuisine.title()} {found_course.title()}" if found_course else found_cuisine.title()
+                return self._format_recipe_list(local_matches) + f'<br><i>(From local recipe database: {label} recipes)</i>'
+            # If nothing found, show a friendly message
+            label = f"{found_cuisine.title()} {found_course.title()}" if found_course else found_cuisine.title()
+            return f"Sorry, I couldn't find any {label} recipes in my database. Try another cuisine or meal type."
+
+        # Multi-ingredient search (try API first, then local)
+        if (('recipes with' in original_query or 'dishes with' in original_query or 'containing' in original_query or 'made with' in original_query) and ('and' in original_query)):
+            ingredients = []
+            query_parts = original_query.replace(',', ' and ')
+            for pattern in [
+                r'(?:with|containing|made with)\s+(.*?)(?:$|and[\s,])',
+                r'(?:with|containing|made with).*?and\s+(.*?)(?:$|\s+and[\s,])'
+            ]:
+                matches = re.findall(pattern, original_query)
+                if matches:
+                    for match in matches:
+                        ingredients.extend([ing.strip() for ing in match.split('and')])
+            if not ingredients:
+                keywords = ['with', 'containing', 'made with']
+                for keyword in keywords:
+                    if keyword in original_query:
+                        parts = original_query.split(keyword, 1)[1].split('and')
+                        ingredients.extend([ing.strip() for ing in parts])
+                        break
+            ingredients = [ing.strip() for ing in ingredients if ing.strip()]
+            # Try TheMealDB API for each ingredient and combine results
+            api_meals = []
+            for ing in ingredients:
+                api_results = self.themealdb.search_by_ingredient(ing)
+                if api_results:
+                    api_meals.extend(api_results)
+            if api_meals:
+                meal_names = ', '.join([meal['strMeal'] for meal in api_meals[:5]])
+                greeting = f"{user_name}, here are recipes from TheMealDB with your ingredients:" if user_name else "Here are recipes from TheMealDB with your ingredients:"
+                return f"{greeting}<br>{meal_names}<br><i>(From TheMealDB API)</i>"
+            # Fallback to local
+            matches = self.multi_ingredient_search(ingredients)
+            if matches:
+                self.current_recipe_list = pd.DataFrame(matches)
+                return self._format_recipe_list(self.current_recipe_list) + '<br><i>(From local recipe database)</i>'
+            else:
+                return f"I couldn't find any recipes containing {', '.join(ingredients)}. Try other ingredients or a broader search."
+
+        # Cooking time queries (local only)
+        time_match = re.search(r'(\d+)\s*(?:minute|minutes|min|mins)', original_query)
+        if time_match and any(word in original_query for word in ['quick', 'under', 'less than']):
+            max_time = int(time_match.group(1))
+            matches = self.search_by_cooking_time(max_time)
+            if matches:
+                self.current_recipe_list = pd.DataFrame(matches)
+                return self._format_recipe_list(self.current_recipe_list) + '<br><i>(From local recipe database)</i>'
+            else:
+                return f"I couldn't find recipes that can be prepared in under {max_time} minutes. Try a longer time duration."
+
+        # Difficulty level queries (local only)
+        difficulty_levels = ['easy', 'medium', 'hard', 'simple', 'difficult', 'beginner', 'advanced']
+        for level in difficulty_levels:
+            if level in original_query:
+                if level == 'simple' or level == 'beginner':
+                    level = 'easy'
+                elif level == 'difficult' or level == 'advanced':
+                    level = 'hard'
+                matches = self.search_by_difficulty(level)
+                if matches:
+                    self.current_recipe_list = pd.DataFrame(matches)
+                    return self._format_recipe_list(self.current_recipe_list) + '<br><i>(From local recipe database)</i>'
+                else:
+                    return f"I couldn't find any {level} recipes. Try another difficulty level."
+
+        # Diet-specific queries (local only)
+        diet_keywords = {
+            'vegetarian': ['vegetarian', 'veg', 'no meat', 'veggie'],
+            'vegan': ['vegan', 'plant based', 'no animal'],
+            'non vegetarian': ['non-vegetarian', 'non veg', 'nonveg', 'meat', 'chicken', 'mutton', 'fish'],
+            'gluten free': ['gluten free', 'gluten-free', 'no gluten'],
+            'high protein': ['high protein', 'protein rich', 'protein-rich']
+        }
+        for diet_key, keywords in diet_keywords.items():
+            if any(kw in original_query for kw in keywords):
+                diet_matches = self.df[self.df['diet'].str.lower() == diet_key.lower()]
+                if not diet_matches.empty:
+                    self.current_recipe_list = diet_matches
+                    return self._format_recipe_list(diet_matches) + '<br><i>(From local recipe database)</i>'
+                else:
+                    return f"I couldn't find any {diet_key} recipes. Try another dietary preference."
+
+        # Cuisine-specific queries (try API first, then local)
+        common_cuisines = [
+            'indian', 'italian', 'chinese', 'mexican', 'thai', 'japanese', 'french',
+            'greek', 'spanish', 'moroccan', 'lebanese', 'turkish', 'american', 'british',
+            'punjabi', 'bengali', 'gujarati', 'south indian', 'north indian', 'maharashtrian',
+            'kerala', 'tamil', 'andhra', 'rajasthani', 'kashmiri', 'goan'
+        ]
+        for cuisine in common_cuisines:
+            if cuisine in original_query:
+                # Try TheMealDB API for cuisine
+                api_results = self.themealdb.search_by_name(cuisine)
+                if api_results:
+                    meal_names = ', '.join([meal['strMeal'] for meal in api_results[:5]])
+                    greeting = f"{user_name}, here are some {cuisine.title()} recipes from TheMealDB:" if user_name else f"Here are some {cuisine.title()} recipes from TheMealDB:"
+                    return f"{greeting}<br>{meal_names}<br><i>(From TheMealDB API)</i>"
+                # Fallback to local
+                cuisine_matches = self.df[self.df['cuisine'].str.lower().str.contains(cuisine, na=False)]
+                if not cuisine_matches.empty:
+                    self.current_recipe_list = cuisine_matches
+                    return self._format_recipe_list(cuisine_matches) + '<br><i>(From local recipe database)</i>'
+
+        # Course-specific queries (local only)
+        course_keywords = {
+            'breakfast': ['breakfast', 'morning meal'],
+            'lunch': ['lunch', 'midday meal'],
+            'dinner': ['dinner', 'evening meal', 'supper'],
+            'snack': ['snack', 'evening snack', 'tea time'],
+            'dessert': ['dessert', 'sweet', 'pudding', 'ice cream'],
+            'appetizer': ['appetizer', 'starter', 'first course'],
+            'main course': ['main course', 'main dish', 'entree']
+        }
         for course_key, keywords in course_keywords.items():
             if any(kw in original_query for kw in keywords):
                 course_matches = self.df[self.df['course'].str.lower().str.contains(course_key, na=False)]
                 if not course_matches.empty:
                     self.current_recipe_list = course_matches
-                    return self._format_recipe_list(course_matches)
+                    return self._format_recipe_list(self.current_recipe_list) + '<br><i>(From local recipe database)</i>'
                 else:
                     return f"I couldn't find any {course_key} recipes. Try another meal type."
-        
-        # Check for single-ingredient queries
+
+        # Single-ingredient queries (try API first, then local)
         if any(word in original_query for word in ['ingredient', 'ingredients', 'contains', 'made with', 'using', 'with']):
-            # Try to extract the ingredient name
             ingredient_patterns = [
                 r'(?:with|contains|using|made with)\s+([a-zA-Z ]+)(?:$|[,\.])',
                 r'recipes (?:with|contains|using|made with)\s+([a-zA-Z ]+)(?:$|[,\.])',
                 r'dishes (?:with|contains|using|made with)\s+([a-zA-Z ]+)(?:$|[,\.])'
             ]
-            
             ingredient = None
             for pattern in ingredient_patterns:
                 match = re.search(pattern, original_query)
                 if match:
                     ingredient = match.group(1).strip()
                     break
-            
             if ingredient:
-                # Use fuzzy matching for ingredient
+                api_results = self.themealdb.search_by_ingredient(ingredient)
+                if api_results:
+                    meal_names = ', '.join([meal['strMeal'] for meal in api_results[:5]])
+                    greeting = f"{user_name}, here are recipes from TheMealDB with {ingredient}:" if user_name else f"Here are recipes from TheMealDB with {ingredient}:"
+                    return f"{greeting}<br>{meal_names}<br><i>(From TheMealDB API)</i>"
                 matches = self.fuzzy_ingredient_search(ingredient)
                 if matches:
                     self.current_recipe_list = pd.DataFrame(matches)
-                    return self._format_recipe_list(self.current_recipe_list)
+                    return self._format_recipe_list(self.current_recipe_list) + '<br><i>(From local recipe database)</i>'
                 else:
-                    # Fallback to basic string matching if fuzzy fails
                     ingredient_matches = self.df[self.df['ingredients'].str.lower().str.contains(ingredient, na=False)]
                     if not ingredient_matches.empty:
                         self.current_recipe_list = ingredient_matches
-                        return self._format_recipe_list(ingredient_matches)
+                        return self._format_recipe_list(ingredient_matches) + '<br><i>(From local recipe database)</i>'
                     else:
                         return f"I couldn't find any recipes with {ingredient}. Try another ingredient."
-        
-        # Get best matching cuisine using TF-IDF
+
+        # General recipe name search (try API first, then local)
+        api_results = self.themealdb.search_by_name(user_query)
+        if api_results:
+            meal = api_results[0]
+            greeting = f"{user_name}, here's a recipe from TheMealDB!" if user_name else "Here's a recipe from TheMealDB!"
+            return f"{greeting}<br><b>{meal['strMeal']}</b><br>Category: {meal['strCategory']}<br>Instructions: {meal['strInstructions']}<br><i>(From TheMealDB API)</i>"
+
+        # Fallback: best match from local CSV
         top_indices, similarities = self._get_best_match(processed_query)
-        
-        # Set a higher similarity threshold for better accuracy
         similarity_threshold = 0.2
         if similarities[0] < similarity_threshold:
-            # If low similarity, try keyword matching with common terms
             food_keywords = ['recipe', 'dish', 'food', 'cuisine', 'meal', 'cook', 'prepare']
             if any(keyword in original_query for keyword in food_keywords):
-                # Return a general recommendation
                 random_recipes = self.df.sample(min(10, len(self.df)))
                 self.current_recipe_list = random_recipes
                 return (
-                    "I'm not sure exactly what you're looking for, but here are some recipes you might like:"
-                    + self._format_recipe_list(random_recipes)
+                    "I'm not sure exactly what you're looking for, but here are some recipes you might like:" +
+                    self._format_recipe_list(random_recipes) + '<br><i>(From local recipe database)</i>'
                 )
             else:
                 return np.random.choice(self.response_templates['unknown'])
-        
-        # Get the best match and return formatted response
         best_match = self.df.iloc[top_indices[0]]
         response = self._format_response(best_match)
         if user_name:
             response = f"<b>{user_name}, here's a recipe you might like:</b><br>" + response
-        return response
+        return response + '<br><i>(From local recipe database)</i>'
     
     def _get_help_info(self):
         """Return help information about what the chatbot can do."""
