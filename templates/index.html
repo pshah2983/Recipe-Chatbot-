@@ -38,13 +38,55 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        .chat-container {
+        .nav-bar {
+            background: var(--accent-color);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: var(--hover-color);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .main-container {
             max-width: 1000px;
             margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .card {
             background: var(--primary-bg);
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .chat-container {
             height: 90vh;
             display: flex;
             flex-direction: column;
@@ -67,16 +109,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-        }
-
-        .theme-toggle {
-            position: absolute;
-            right: 60px;
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 20px;
         }
 
         .chat-messages {
@@ -486,55 +518,51 @@
             font-size: 0.9em;
         }
 
-        /* Navigation styles */
-        .nav-bar {
-            background: var(--accent-color);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-
-        .nav-links a:hover {
-            background-color: var(--hover-color);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-info span {
-            color: white;
-        }
-
-        .logout-btn {
-            background: none;
-            border: 1px solid white;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
+        .recipe-card {
+            background: var(--primary-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
             cursor: pointer;
         }
 
-        .logout-btn:hover {
-            background: white;
+        .recipe-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .recipe-card .recipe-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .recipe-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 8px;
             color: var(--accent-color);
+        }
+
+        .recipe-card p {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .recipe-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+        }
+
+        .cuisine-tag, .diet-tag {
+            background: var(--accent-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
         }
 
         /* Modal styles */
@@ -654,53 +682,55 @@
     <div class="nav-bar">
         <div class="nav-links">
             <a href="/homepage">Home</a>
+            <a href="/">Chat</a>
             <a href="/login">Login</a>
             <a href="/register">Register</a>
         </div>
-        <div class="user-info" id="user-info">
-            <!-- Will be populated by JavaScript -->
-        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
     </div>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h1>🍳 Cuisine Chatbot</h1>
-            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-            <div class="help-tooltip" onclick="toggleHelp()">?</div>
-            <div class="help-content" id="help-content">
-                <h3>What you can ask me:</h3>
-                <ul>
-                    <li>Basic greetings
-                        <div class="example">"hello", "hi", "bye", "thanks"</div>
-                    </li>
-                    <li>Get specific recipes by number
-                        <div class="example">"give me recipe number 3"</div>
-                    </li>
-                    <li>Search by diet type
-                        <div class="example">"show vegetarian recipes", "vegan dishes"</div>
-                    </li>
-                    <li>Search by cuisine
-                        <div class="example">"gujarati recipes", "maharashtrian food"</div>
-                    </li>
-                    <li>Search by ingredients
-                        <div class="example">"recipes with paneer", "dishes containing rice"</div>
-                    </li>
-                </ul>
+    <div class="main-container">
+        <div class="card chat-card">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h1>🍳 Cuisine Chatbot</h1>
+                    <div class="help-tooltip" onclick="toggleHelp()">?</div>
+                    <div class="help-content" id="help-content">
+                        <h3>What you can ask me:</h3>
+                        <ul>
+                            <li>Basic greetings
+                                <div class="example">"hello", "hi", "bye", "thanks"</div>
+                            </li>
+                            <li>Get specific recipes by number
+                                <div class="example">"give me recipe number 3"</div>
+                            </li>
+                            <li>Search by diet type
+                                <div class="example">"show vegetarian recipes", "vegan dishes"</div>
+                            </li>
+                            <li>Search by cuisine
+                                <div class="example">"gujarati recipes", "maharashtrian food"</div>
+                            </li>
+                            <li>Search by ingredients
+                                <div class="example">"recipes with paneer", "dishes containing rice"</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message bot">
+                        Hello! I'm your cuisine assistant. I can help you discover delicious recipes and learn about different cuisines. What would you like to know?
+                    </div>
+                </div>
+                <div class="typing-indicator" id="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="chat-input">
+                    <button class="voice-input" onclick="toggleVoiceInput()" aria-label="Voice Input">🎤</button>
+                    <input type="text" id="user-input" placeholder="Ask about recipes, cuisines, or cooking methods...">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
             </div>
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <div class="message bot">
-                Hello! I'm your cuisine assistant. I can help you discover delicious recipes and learn about different cuisines. What would you like to know?
-            </div>
-        </div>
-        <div class="typing-indicator" id="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <div class="chat-input">
-            <button class="voice-input" onclick="toggleVoiceInput()" aria-label="Voice Input">🎤</button>
-            <input type="text" id="user-input" placeholder="Ask about recipes, cuisines, or cooking methods...">
-            <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 

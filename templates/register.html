@@ -61,13 +61,22 @@
             background-color: var(--hover-color);
         }
 
-        .register-container {
-            max-width: 400px;
-            margin: 60px auto;
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: calc(100vh - 80px);
+        }
+
+        .card {
             background: var(--primary-bg);
             border-radius: 16px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.08);
             padding: 40px 32px 32px 32px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         h2 {
@@ -134,8 +143,12 @@
         }
 
         .theme-toggle {
-            float: right;
-            margin-top: -40px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-left: auto;
         }
     </style>
 </head>
@@ -147,32 +160,34 @@
             <a href="/login">Login</a>
             <a href="/register">Register</a>
         </div>
-    </div>
-    <div class="register-container">
         <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-        <h2>Register</h2>
-        <div class="error-message" id="error-message"></div>
-        <form id="register-form">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+    </div>
+    <div class="main-container">
+        <div class="card register-card">
+            <h2>Register</h2>
+            <div class="error-message" id="error-message"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required>
+                </div>
+                <button type="submit" class="submit-btn">Register</button>
+            </form>
+            <div class="login-link">
+                Already have an account? <a href="/login">Login here</a>
             </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div class="form-group">
-                <label for="confirm-password">Confirm Password</label>
-                <input type="password" id="confirm-password" name="confirm-password" required>
-            </div>
-            <button type="submit" class="submit-btn">Register</button>
-        </form>
-        <div class="login-link">
-            Already have an account? <a href="/login">Login here</a>
         </div>
     </div>
     <script>

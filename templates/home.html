@@ -13,9 +13,35 @@
             margin: 0;
             padding: 0;
         }
-        .home-container {
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--primary-bg);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .nav-links a {
+            margin: 0 16px;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+        .main-container {
             max-width: 700px;
             margin: 40px auto;
+            padding: 0 16px;
+        }
+        .card {
             background: var(--primary-bg);
             border-radius: 16px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.08);
@@ -38,10 +64,6 @@
             margin-bottom: 8px;
             color: var(--text-color);
         }
-        .theme-toggle {
-            float: right;
-            margin-top: -40px;
-        }
     </style>
 </head>
 <body>
@@ -52,33 +74,35 @@
             <a href="/login">Login</a>
             <a href="/register">Register</a>
         </div>
-    </div>
-    <div class="home-container">
         <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-        <h1>Welcome to the Indian Cuisine Recipe Chatbot!</h1>
-        <p>This chatbot helps you discover and explore Indian recipes using natural language queries. You can search by recipe name, ingredients, cuisine, diet, and more!</p>
-        <h2>Features</h2>
-        <ul>
-            <li>Intelligent recipe search (by name, ingredient, cuisine, diet, etc.)</li>
-            <li>Image matching for recipes</li>
-            <li>Personalized responses</li>
-            <li>Chat history for logged-in users</li>
-            <li>Modern, responsive interface</li>
-        </ul>
-        <h2>How to Use</h2>
-        <ol>
-            <li>Type your query in the chat box (e.g., "Show me vegetarian breakfast recipes")</li>
-            <li>Click send or press Enter</li>
-            <li>View recipe details and images</li>
-        </ol>
-        {% if chat_history %}
-        <h2>Your Chat History</h2>
-        <ul class="chat-history-list">
-            {% for chat in chat_history %}
-            <li><strong>{{ chat['timestamp'] }}</strong>: {{ chat['message'] }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+    </div>
+    <div class="main-container">
+        <div class="card">
+            <h1>Welcome to the Indian Cuisine Recipe Chatbot!</h1>
+            <p>This chatbot helps you discover and explore Indian recipes using natural language queries. You can search by recipe name, ingredients, cuisine, diet, and more!</p>
+            <h2>Features</h2>
+            <ul>
+                <li>Intelligent recipe search (by name, ingredient, cuisine, diet, etc.)</li>
+                <li>Image matching for recipes</li>
+                <li>Personalized responses</li>
+                <li>Chat history for logged-in users</li>
+                <li>Modern, responsive interface</li>
+            </ul>
+            <h2>How to Use</h2>
+            <ol>
+                <li>Type your query in the chat box (e.g., "Show me vegetarian breakfast recipes")</li>
+                <li>Click send or press Enter</li>
+                <li>View recipe details and images</li>
+            </ol>
+            {% if chat_history %}
+            <h2>Your Chat History</h2>
+            <ul class="chat-history-list">
+                {% for chat in chat_history %}
+                <li><strong>{{ chat['timestamp'] }}</strong>: {{ chat['message'] }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
     </div>
     <script>
         function toggleTheme() {
