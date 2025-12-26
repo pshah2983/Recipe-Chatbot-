@@ -1,940 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cuisine Chatbot</title>
-    <style>
-        :root {
-            --primary-bg: #ffffff;
-            --secondary-bg: #f8f9fa;
-            --text-color: #333333;
-            --border-color: #dee2e6;
-            --accent-color: #2c3e50;
-            --hover-color: #34495e;
-        }
-
-        [data-theme="dark"] {
-            --primary-bg: #1a1a1a;
-            --secondary-bg: #2d2d2d;
-            --text-color: #ffffff;
-            --border-color: #404040;
-            --accent-color: #4a90e2;
-            --hover-color: #357abd;
-            --recipe-bg: #333333;
-            --recipe-hover: #404040;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: var(--secondary-bg);
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .nav-bar {
-            background: var(--accent-color);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-
-        .nav-links a:hover {
-            background-color: var(--hover-color);
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 20px;
-        }
-
-        .main-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        .card {
-            background: var(--primary-bg);
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .chat-container {
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        @media (max-width: 768px) {
-            .chat-container {
-                height: 100vh;
-                border-radius: 0;
-            }
-        }
-
-        .chat-header {
-            background: var(--accent-color);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            max-width: 85%;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        .message.user {
-            background: var(--accent-color);
-            color: white;
-            align-self: flex-end;
-        }
-
-        .message.bot {
-            background: var(--recipe-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            align-self: flex-start;
-        }
-
-        .typing-indicator {
-            display: none;
-            align-self: flex-start;
-            background: var(--secondary-bg);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            margin-right: 5px;
-            animation: typing 1s infinite;
-        }
-
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typing {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .chat-input {
-            padding: 15px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 10px;
-            background: var(--primary-bg);
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            font-size: 16px;
-            background: var(--primary-bg);
-            color: var(--text-color);
-        }
-
-        button {
-            padding: 10px 20px;
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background: var(--hover-color);
-        }
-
-        .voice-input {
-            padding: 10px;
-            background: none;
-            border: none;
-            color: var(--accent-color);
-            cursor: pointer;
-            font-size: 20px;
-        }
-
-        /* Recipe styling updates */
-        .recipe-list {
-            background: var(--primary-bg);
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .recipe-list-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            padding: 10px;
-        }
-
-        .recipe-list-item {
-            background: var(--bg-secondary);
-            border-radius: 6px;
-            padding: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-
-        .recipe-list-item:hover {
-            transform: translateY(-2px);
-        }
-
-        .recipe-number {
-            font-size: 0.9em;
-            color: var(--text-color);
-            margin-bottom: 5px;
-        }
-
-        .recipe-image {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 5px;
-        }
-
-        .recipe-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-
-        .recipe-list-info {
-            padding: 5px 0;
-        }
-
-        .recipe-list-info strong {
-            font-size: 0.9em;
-            color: var(--text-color);
-            display: block;
-            margin-bottom: 3px;
-            line-height: 1.2;
-        }
-
-        .recipe-course {
-            font-size: 0.8em;
-            color: var(--text-color);
-            opacity: 0.8;
-        }
-
-        .cuisine-section {
-            margin-bottom: 20px;
-        }
-
-        .cuisine-title {
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            color: var(--accent-color);
-        }
-
-        .diet-section {
-            margin-bottom: 15px;
-        }
-
-        .diet-title {
-            font-size: 1em;
-            margin-bottom: 8px;
-            color: var(--text-color);
-        }
-
-        .recipe-instruction {
-            margin-top: 20px;
-            padding: 10px;
-            background: var(--accent-color);
-            color: white;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .recipe-details {
-            background: var(--bg-primary);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .recipe-details .recipe-image {
-            width: 100%;
-            max-height: 300px;
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .recipe-details .recipe-image img {
-            max-width: 100%;
-            max-height: 300px;
-            object-fit: contain;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .recipe-details .recipe-title {
-            color: var(--accent-color);
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .recipe-section {
-            margin: 20px 0;
-            padding: 15px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-        }
-
-        .recipe-section:last-child {
-            border-bottom: none;
-        }
-
-        .recipe-section-title {
-            color: var(--accent-color);
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-
-        .recipe-description {
-            line-height: 1.6;
-            color: var(--text-color);
-        }
-
-        .recipe-info-list, .ingredients-list {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .recipe-info-list li, .ingredients-list li {
-            margin: 8px 0;
-            color: var(--text-color);
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .recipe-info-list li:before, .ingredients-list li:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--accent-color);
-        }
-
-        .instructions-list {
-            padding-left: 25px;
-            color: var(--text-color);
-        }
-
-        .instructions-list li {
-            margin: 12px 0;
-            line-height: 1.5;
-        }
-
-        /* Help information styling */
-        .help-info {
-            background: var(--recipe-bg);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 10px 0;
-            border: 1px solid var(--border-color);
-        }
-
-        .help-info h3 {
-            color: var(--text-color);
-            margin-bottom: 15px;
-        }
-
-        .help-info ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-
-        .help-info li {
-            color: var(--text-color);
-            margin-bottom: 10px;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .help-info li:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--accent-color);
-        }
-
-        .help-info p {
-            color: var(--text-color);
-            margin-top: 15px;
-        }
-
-        /* Slideshow styles */
-        .recipe-slideshow {
-            position: relative;
-            margin: 15px 0;
-        }
-
-        .slide {
-            display: none;
-            padding: 20px;
-            background: var(--secondary-bg);
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .slide.active {
-            display: block;
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .slideshow-nav {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .slideshow-nav button {
-            padding: 5px 10px;
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .help-tooltip {
-            position: absolute;
-            right: 20px;
-            width: 24px;
-            height: 24px;
-            background: white;
-            color: var(--accent-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .help-content {
-            display: none;
-            position: absolute;
-            top: 60px;
-            right: 20px;
-            background: var(--primary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            width: 300px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .help-content.show {
-            display: block;
-        }
-
-        .help-content h3 {
-            margin-bottom: 10px;
-            color: var(--text-color);
-        }
-
-        .help-content ul {
-            list-style: none;
-        }
-
-        .help-content li {
-            margin-bottom: 10px;
-            color: var(--text-color);
-        }
-
-        .help-content .example {
-            font-style: italic;
-            color: var(--accent-color);
-            margin-left: 10px;
-            font-size: 0.9em;
-        }
-
-        .recipe-card {
-            background: var(--primary-bg);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-
-        .recipe-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .recipe-card .recipe-image {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        .recipe-card h3 {
-            font-size: 1.2em;
-            margin-bottom: 8px;
-            color: var(--accent-color);
-        }
-
-        .recipe-card p {
-            color: var(--text-color);
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-
-        .recipe-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8em;
-        }
-
-        .cuisine-tag, .diet-tag {
-            background: var(--accent-color);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-        }
-
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-
-        .modal-content {
-            position: relative;
-            background-color: var(--bg-primary);
-            margin: 5% auto;
-            padding: 20px;
-            width: 80%;
-            max-width: 800px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-image {
-            width: 100%;
-            max-height: 70vh;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .close-modal {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
-        .close-modal:hover {
-            color: var(--accent-color);
-        }
-
-        .recipe-header {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-        }
-
-        .recipe-image-container {
-            flex: 0 0 200px;
-        }
-
-        .recipe-header-image {
-            width: 200px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .recipe-header-info {
-            flex: 1;
-        }
-
-        .recipe-header-info .recipe-title {
-            margin: 0 0 10px 0;
-            color: var(--accent-color);
-            font-size: 1.5em;
-        }
-
-        .basic-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 8px;
-        }
-
-        .basic-info p {
-            margin: 0;
-            color: var(--text-color);
-            font-size: 0.9em;
-        }
-
-        .basic-info strong {
-            color: var(--accent-color);
-        }
-
-        @media (max-width: 600px) {
-            .recipe-header {
-                flex-direction: column;
-            }
-
-            .recipe-image-container {
-                width: 100%;
-            }
-
-            .recipe-header-image {
-                width: 100%;
-                height: 200px;
-            }
-
-            .basic-info {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta name="description" content="Discover delicious recipes with our AI-powered Recipe Chatbot. Find Indian, Italian, Chinese, and world cuisines with health tips, ingredient substitutions, and smart recommendations.">
+    <meta name="keywords" content="recipes, cooking, chatbot, Indian food, world cuisines, healthy cooking, meal planning">
+    <meta name="author" content="Recipe Chatbot">
+    
+    <title>Recipe Chatbot | Discover Delicious Recipes</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/modern-style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
 </head>
 <body>
-    <div class="nav-bar">
-        <div class="nav-links">
-            <a href="/homepage">Home</a>
-            <a href="/">Chat</a>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-        </div>
-        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-    </div>
-    <div class="main-container">
-        <div class="card chat-card">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h1>🍳 Cuisine Chatbot</h1>
-                    <div class="help-tooltip" onclick="toggleHelp()">?</div>
-                    <div class="help-content" id="help-content">
-                        <h3>What you can ask me:</h3>
-                        <ul>
-                            <li>Basic greetings
-                                <div class="example">"hello", "hi", "bye", "thanks"</div>
-                            </li>
-                            <li>Get specific recipes by number
-                                <div class="example">"give me recipe number 3"</div>
-                            </li>
-                            <li>Search by diet type
-                                <div class="example">"show vegetarian recipes", "vegan dishes"</div>
-                            </li>
-                            <li>Search by cuisine
-                                <div class="example">"gujarati recipes", "maharashtrian food"</div>
-                            </li>
-                            <li>Search by ingredients
-                                <div class="example">"recipes with paneer", "dishes containing rice"</div>
-                            </li>
-                        </ul>
-                    </div>
+    <div class="chat-container glass-card">
+        <!-- Header -->
+        <header class="chat-header">
+            <div class="chat-header-logo">
+                <div class="logo-icon">🍳</div>
+                <h1>
+                    Recipe Chatbot
+                    <span>Your AI Cooking Companion</span>
+                </h1>
+            </div>
+            
+            <div class="header-actions">
+                <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                
+                {% if current_user.is_authenticated %}
+                <div class="user-menu">
+                    <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+                    <span>{{ current_user.username }}</span>
                 </div>
-                <div class="chat-messages" id="chat-messages">
-                    <div class="message bot">
-                        Hello! I'm your cuisine assistant. I can help you discover delicious recipes and learn about different cuisines. What would you like to know?
-                    </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Logout</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem; width: auto;">Sign Up</a>
+                {% endif %}
+            </div>
+        </header>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chat-messages">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcome-screen">
+                <div class="welcome-icon">🍳</div>
+                <h2>Welcome to Recipe Chatbot!</h2>
+                <p>I can help you discover delicious recipes, explain health benefits, suggest ingredient substitutions, and much more. What are you craving today?</p>
+                
+                <div class="welcome-suggestions">
+                    <button class="welcome-suggestion" onclick="handleWelcomeSuggestion('Show me popular Indian recipes')">
+                        🍛 Indian Recipes
+                    </button>
+                    <button class="welcome-suggestion" onclick="handleWelcomeSuggestion('Quick breakfast ideas under 30 minutes')">
+                        🌅 Quick Breakfast
+                    </button>
+                    <button class="welcome-suggestion" onclick="handleWelcomeSuggestion('Healthy vegetarian dinner recipes')">
+                        🥗 Vegetarian Dishes
+                    </button>
+                    <button class="welcome-suggestion" onclick="handleWelcomeSuggestion('What can I make with chicken and rice?')">
+                        🍗 Chicken & Rice
+                    </button>
+                    <button class="welcome-suggestion" onclick="handleWelcomeSuggestion('Easy dessert recipes')">
+                        🍰 Easy Desserts
+                    </button>
+                    <button class="welcome-suggestion" onclick="handleWelcomeSuggestion('Low calorie lunch options')">
+                        🥦 Healthy Lunch
+                    </button>
                 </div>
-                <div class="typing-indicator" id="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="chat-input">
-                    <button class="voice-input" onclick="toggleVoiceInput()" aria-label="Voice Input">🎤</button>
-                    <input type="text" id="user-input" placeholder="Ask about recipes, cuisines, or cooking methods...">
-                    <button onclick="sendMessage()">Send</button>
+            </div>
+            
+            <!-- Typing Indicator (hidden by default) -->
+            <div class="message bot typing-indicator hidden" id="typing-indicator">
+                <div class="message-avatar">🍳</div>
+                <div class="typing-dots">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="recipeModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <img id="modalImage" class="modal-image" src="" alt="Recipe Image">
-            <div class="recipe-details">
-                <h3 id="modalTitle"></h3>
-                <p id="modalDescription"></p>
-                <p id="modalCuisine"></p>
-                <p id="modalDiet"></p>
-                <p id="modalPrepTime"></p>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    class="chat-input" 
+                    id="chat-input" 
+                    placeholder="Ask me about recipes, ingredients, or cuisines..."
+                    rows="1"
+                    autocomplete="off"
+                ></textarea>
+                <button class="send-button" id="send-button" title="Send message">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="quick-action" onclick="handleQuickAction('breakfast')">
+                    🌅 Breakfast
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('lunch')">
+                    🥪 Lunch
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('dinner')">
+                    🍽️ Dinner
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('vegetarian')">
+                    🥬 Vegetarian
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('quick')">
+                    ⚡ Quick & Easy
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('indian')">
+                    🍛 Indian
+                </button>
+                <button class="quick-action" onclick="handleQuickAction('healthy')">
+                    💚 Healthy
+                </button>
             </div>
         </div>
     </div>
-
-    <script>
-        // Theme toggle
-        function toggleTheme() {
-            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', document.body.dataset.theme);
-        }
-
-        // Load saved theme
-        document.body.dataset.theme = localStorage.getItem('theme') || 'light';
-
-        // Voice input
-        let recognition;
-        function toggleVoiceInput() {
-            if (!recognition) {
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onresult = function(event) {
-                    const text = event.results[0][0].transcript;
-                    document.getElementById('user-input').value = text;
-                    sendMessage();
-                };
-            }
-
-            recognition.start();
-        }
-
-        // Typing animation
-        function showTypingIndicator() {
-            document.getElementById('typing-indicator').style.display = 'block';
-        }
-
-        function hideTypingIndicator() {
-            document.getElementById('typing-indicator').style.display = 'none';
-        }
-
-        // Enhanced message sending
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            // Add user message
-            addMessage(message, true);
-            input.value = '';
-            
-            // Show typing indicator
-            showTypingIndicator();
-            
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: message }),
-                });
-                
-                const data = await response.json();
-                
-                // Hide typing indicator and add bot message
-                hideTypingIndicator();
-                addMessage(data.response);
-                
-                // Initialize slideshow if present
-                initializeSlideshow();
-            } catch (error) {
-                console.error('Error:', error);
-                hideTypingIndicator();
-                addMessage('Sorry, I encountered an error. Please try again.');
-            }
-        }
-
-        // Slideshow functionality
-        function initializeSlideshow() {
-            const slideshows = document.querySelectorAll('.recipe-slideshow');
-            slideshows.forEach(slideshow => {
-                const slides = slideshow.querySelectorAll('.slide');
-                let currentSlide = 0;
-
-                function showSlide(index) {
-                    slides.forEach(slide => slide.classList.remove('active'));
-                    slides[index].classList.add('active');
-                }
-
-                function nextSlide() {
-                    currentSlide = (currentSlide + 1) % slides.length;
-                    showSlide(currentSlide);
-                }
-
-                function prevSlide() {
-                    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-                    showSlide(currentSlide);
-                }
-
-                // Add navigation if more than one slide
-                if (slides.length > 1) {
-                    const nav = document.createElement('div');
-                    nav.className = 'slideshow-nav';
-                    nav.innerHTML = `
-                        <button onclick="prevSlide()">Previous</button>
-                        <button onclick="nextSlide()">Next</button>
-                    `;
-                    slideshow.appendChild(nav);
-                }
-
-                showSlide(0);
-            });
-        }
-
-        // Help tooltip
-        function toggleHelp() {
-            document.getElementById('help-content').classList.toggle('show');
-        }
-
-        // Input handling
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // Message display function
-        function addMessage(text, isUser = false) {
-            const messagesDiv = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-            
-            // If the message contains HTML (from bot responses), insert it safely
-            if (!isUser && text.includes('<')) {
-                messageDiv.innerHTML = text;
-            } else {
-                messageDiv.textContent = text;
-            }
-            
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        // Add modal functionality
-        const modal = document.getElementById('recipeModal');
-        const modalImage = document.getElementById('modalImage');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalDescription = document.getElementById('modalDescription');
-        const modalCuisine = document.getElementById('modalCuisine');
-        const modalDiet = document.getElementById('modalDiet');
-        const modalPrepTime = document.getElementById('modalPrepTime');
-        const closeModal = document.querySelector('.close-modal');
-
-        function showRecipeDetails(recipe) {
-            modalImage.src = recipe.image;
-            modalTitle.textContent = recipe.name;
-            modalDescription.textContent = recipe.description;
-            modalCuisine.textContent = `Cuisine: ${recipe.cuisine}`;
-            modalDiet.textContent = `Diet: ${recipe.diet}`;
-            modalPrepTime.textContent = `Preparation Time: ${recipe.prep_time}`;
-            modal.style.display = 'block';
-        }
-
-        closeModal.onclick = function() {
-            modal.style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // Update the recipe card click handler
-        function createRecipeCard(recipe) {
-            const card = document.createElement('div');
-            card.className = 'recipe-card';
-            card.innerHTML = `
-                <img src="${recipe.image}" alt="${recipe.name}" class="recipe-image">
-                <h3>${recipe.name}</h3>
-                <p>${recipe.description}</p>
-                <div class="recipe-meta">
-                    <span class="cuisine-tag">${recipe.cuisine}</span>
-                    <span class="diet-tag">${recipe.diet}</span>
-                </div>
-            `;
-            card.onclick = () => showRecipeDetails(recipe);
-            return card;
-        }
-    </script>
+    
+    <!-- Recipe Modal -->
+    <div class="modal-overlay" id="modal-overlay"></div>
+    
+    <!-- Scripts -->
+    <script src="/static/js/chat.js"></script>
 </body>
 </html>

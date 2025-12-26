@@ -1,189 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Indian Cuisine Chatbot</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <style>
-        :root {
-            --primary-bg: #ffffff;
-            --secondary-bg: #f8f9fa;
-            --text-color: #333333;
-            --border-color: #dee2e6;
-            --accent-color: #2c3e50;
-            --hover-color: #34495e;
-        }
+    <meta name="description"
+        content="Login to Recipe Chatbot - Access your saved recipes, favorites, and personalized recommendations.">
 
-        [data-theme="dark"] {
-            --primary-bg: #1a1a1a;
-            --secondary-bg: #2d2d2d;
-            --text-color: #ffffff;
-            --border-color: #404040;
-            --accent-color: #4a90e2;
-            --hover-color: #357abd;
-        }
+    <title>Login | Recipe Chatbot</title>
 
-        body {
-            background: var(--secondary-bg);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-bar {
-            background: var(--accent-color);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto 20px auto;
-            border-radius: 10px;
-        }
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/modern-style.css">
 
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-
-        .nav-links a:hover {
-            background-color: var(--hover-color);
-        }
-
-        .main-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: calc(100vh - 80px);
-        }
-
-        .card {
-            background: var(--primary-bg);
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            padding: 40px 32px 32px 32px;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        h2 {
-            color: var(--accent-color);
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-color);
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background: var(--primary-bg);
-            color: var(--text-color);
-        }
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 10px;
-            transition: background 0.3s;
-        }
-        .submit-btn:hover {
-            background: var(--hover-color);
-        }
-        .error-message {
-            color: #dc3545;
-            margin-bottom: 15px;
-            text-align: center;
-            display: none;
-        }
-        .register-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .register-link a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-    </style>
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
 </head>
+
 <body>
-    <div class="nav-bar">
-        <div class="nav-links">
-            <a href="/homepage">Home</a>
-            <a href="/">Chat</a>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-        </div>
-        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-    </div>
-    <div class="main-container">
-        <div class="card login-card">
-            <h2>Login</h2>
-            <div class="error-message" id="error-message"></div>
-            <form id="login-form">
+    <div class="auth-container">
+        <div class="auth-card glass-card">
+            <div class="auth-header">
+                <div class="logo">🍳</div>
+                <h1>Welcome Back!</h1>
+                <p>Sign in to continue your culinary journey</p>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" name="username" class="form-input"
+                        placeholder="Enter your username" required autocomplete="username">
                 </div>
+
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                        placeholder="Enter your password" required autocomplete="current-password">
                 </div>
-                <button type="submit" class="submit-btn">Login</button>
+
+                <div id="error-message" class="error-message"
+                    style="display: none; color: var(--primary); margin-bottom: 1rem; text-align: center;"></div>
+
+                <button type="submit" class="btn btn-primary" id="login-btn">
+                    <span id="btn-text">Sign In</span>
+                    <span id="btn-loading" style="display: none;">Signing in...</span>
+                </button>
             </form>
-            <div class="register-link">
-                Don't have an account? <a href="/register">Register here</a>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p>
+                <p style="margin-top: 1rem;"><a href="{{ url_for('chat_page') }}">← Back to chat</a></p>
             </div>
         </div>
     </div>
+
     <script>
-        function toggleTheme() {
-            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', document.body.dataset.theme);
-        }
-        document.body.dataset.theme = localStorage.getItem('theme') || 'light';
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Theme initialization
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
+            const btnText = document.getElementById('btn-text');
+            const btnLoading = document.getElementById('btn-loading');
+            const loginBtn = document.getElementById('login-btn');
+
+            // Show loading state
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+            loginBtn.disabled = true;
+            errorMessage.style.display = 'none';
+
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
@@ -192,18 +91,55 @@
                     },
                     body: JSON.stringify({ username, password }),
                 });
+
                 const data = await response.json();
+
                 if (data.success) {
-                    window.location.href = '/';
+                    // Add success animation
+                    loginBtn.style.background = 'var(--gradient-secondary)';
+                    btnLoading.textContent = 'Success! Redirecting...';
+
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 500);
                 } else {
-                    errorMessage.textContent = data.message;
+                    errorMessage.textContent = data.message || 'Invalid username or password';
                     errorMessage.style.display = 'block';
+
+                    // Shake animation
+                    errorMessage.style.animation = 'shake 0.5s ease-in-out';
+                    setTimeout(() => {
+                        errorMessage.style.animation = '';
+                    }, 500);
                 }
             } catch (error) {
                 errorMessage.textContent = 'An error occurred. Please try again.';
                 errorMessage.style.display = 'block';
+            } finally {
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                loginBtn.disabled = false;
             }
-        });
+        }
     </script>
+
+    <style>
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+        }
+    </style>
 </body>
+
 </html>

@@ -103,7 +103,30 @@ def chat():
     user_message = request.json.get('message', '')
     user_name = current_user.username if current_user.is_authenticated else None
     response = chatbot.get_response(user_message, user_name=user_name)
-    return jsonify({'response': response})
+    
+    # Get follow-up suggestions based on current context
+    current_recipe = None
+    if hasattr(chatbot, 'current_recipe') and chatbot.current_recipe is not None:
+        if hasattr(chatbot.current_recipe, 'to_dict'):
+            current_recipe = chatbot.current_recipe.to_dict()
+        else:
+            current_recipe = chatbot.current_recipe
+    
+    suggestions = chatbot._get_follow_up_suggestions(current_recipe)
+    
+    # Determine data source from response
+    source = None
+    if 'TheMealDB API' in response:
+        source = 'TheMealDB API'
+    elif 'local recipe database' in response:
+        source = 'Local Database'
+    
+    return jsonify({
+        'response': response,
+        'suggestions': suggestions,
+        'source': source,
+        'recipe': current_recipe
+    })
 
 @app.route('/favorite', methods=['POST'])
 @login_required

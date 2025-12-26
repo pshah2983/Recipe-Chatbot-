@@ -1,115 +1,277 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indian Cuisine Chatbot - Home</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <meta name="description" content="Recipe Chatbot Home - Browse your chat history and discover new recipes.">
+
+    <title>Home | Recipe Chatbot</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/modern-style.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
+
     <style>
-        body {
-            background: var(--secondary-bg);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+        .home-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+            min-height: 100vh;
         }
-        .nav-bar {
+
+        .home-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 16px;
-            background: var(--primary-bg);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            justify-content: space-between;
+            margin-bottom: var(--space-2xl);
+            flex-wrap: wrap;
+            gap: var(--space-lg);
         }
-        .nav-links a {
-            margin: 0 16px;
-            color: var(--text-color);
-            text-decoration: none;
+
+        .home-header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
         }
-        .nav-links a:hover {
-            text-decoration: underline;
+
+        .home-header-left .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            box-shadow: var(--shadow-glow);
         }
-        .theme-toggle {
-            background: none;
-            border: none;
+
+        .home-header h1 {
+            font-size: 1.75rem;
+        }
+
+        .home-header h1 span {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: var(--space-lg);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .history-card {
+            padding: var(--space-lg);
+            transition: all var(--transition-normal);
             cursor: pointer;
-            font-size: 18px;
-            color: var(--text-color);
         }
-        .main-container {
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 0 16px;
+
+        .history-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
         }
-        .card {
-            background: var(--primary-bg);
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            padding: 40px 32px 32px 32px;
+
+        .history-card-message {
+            font-weight: 500;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
+            overflow: hidden;
         }
-        h1, h2 {
-            color: var(--accent-color);
+
+        .history-card-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
-        ul, ol {
-            margin-bottom: 24px;
+
+        .empty-state {
+            text-align: center;
+            padding: var(--space-2xl);
+            color: var(--text-secondary);
         }
-        .chat-history-list {
-            background: var(--bg-secondary, #f4f4f4);
-            border-radius: 8px;
-            padding: 16px;
-            max-height: 200px;
-            overflow-y: auto;
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-lg);
+            opacity: 0.5;
         }
-        .chat-history-list li {
-            margin-bottom: 8px;
-            color: var(--text-color);
+
+        .cta-section {
+            margin-top: var(--space-2xl);
+            padding: var(--space-2xl);
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .cta-section p {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xl);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-2xl);
+        }
+
+        .feature-card {
+            padding: var(--space-lg);
+            text-align: center;
+        }
+
+        .feature-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .feature-card h3 {
+            font-size: 1rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .feature-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
     </style>
 </head>
+
 <body>
-    <div class="nav-bar">
-        <div class="nav-links">
-            <a href="/homepage">Home</a>
-            <a href="/">Chat</a>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-        </div>
-        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-    </div>
-    <div class="main-container">
-        <div class="card">
-            <h1>Welcome to the Indian Cuisine Recipe Chatbot!</h1>
-            <p>This chatbot helps you discover and explore Indian recipes using natural language queries. You can search by recipe name, ingredients, cuisine, diet, and more!</p>
-            <h2>Features</h2>
-            <ul>
-                <li>Intelligent recipe search (by name, ingredient, cuisine, diet, etc.)</li>
-                <li>Image matching for recipes</li>
-                <li>Personalized responses</li>
-                <li>Chat history for logged-in users</li>
-                <li>Modern, responsive interface</li>
-            </ul>
-            <h2>How to Use</h2>
-            <ol>
-                <li>Type your query in the chat box (e.g., "Show me vegetarian breakfast recipes")</li>
-                <li>Click send or press Enter</li>
-                <li>View recipe details and images</li>
-            </ol>
-            {% if chat_history %}
-            <h2>Your Chat History</h2>
-            <ul class="chat-history-list">
-                {% for chat in chat_history %}
-                <li><strong>{{ chat['timestamp'] }}</strong>: {{ chat['message'] }}</li>
+    <div class="home-container">
+        <!-- Header -->
+        <header class="home-header">
+            <div class="home-header-left">
+                <div class="logo-icon">🍳</div>
+                <h1>
+                    Recipe Chatbot
+                    <span>{% if current_user.is_authenticated %}Welcome back, {{ current_user.username }}!{% else %}Your
+                        AI Cooking Companion{% endif %}</span>
+                </h1>
+            </div>
+
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <span class="theme-icon" id="theme-icon">🌙</span>
+                </button>
+
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.875rem;">Logout</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-secondary"
+                    style="padding: 0.5rem 1rem; font-size: 0.875rem;">Login</a>
+                {% endif %}
+
+                <a href="{{ url_for('chat_page') }}" class="btn btn-primary"
+                    style="padding: 0.5rem 1rem; font-size: 0.875rem; width: auto;">
+                    💬 Start Chatting
+                </a>
+            </div>
+        </header>
+
+        <!-- Chat History Section -->
+        {% if current_user.is_authenticated and chat_history %}
+        <section>
+            <h2 class="section-title">📜 Recent Conversations</h2>
+            <div class="history-grid">
+                {% for chat in chat_history[-6:]|reverse %}
+                <div class="history-card glass-card glass-card-hover" onclick="window.location.href='/'">
+                    <div class="history-card-message">{{ chat.message }}</div>
+                    <div class="history-card-time">{{ chat.timestamp }}</div>
+                </div>
                 {% endfor %}
-            </ul>
-            {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- CTA Section -->
+        <section class="cta-section glass-card">
+            <h2>🍳 Ready to cook something amazing?</h2>
+            <p>Ask me about any recipe, ingredient, or cuisine. I can help with health benefits, substitutions, and
+                more!</p>
+            <a href="{{ url_for('chat_page') }}" class="btn btn-primary"
+                style="width: auto; padding: 1rem 2rem; font-size: 1rem;">
+                Start Cooking with AI →
+            </a>
+        </section>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-card glass-card">
+                <div class="icon">🔍</div>
+                <h3>Smart Search</h3>
+                <p>Find recipes by ingredients, cuisine, or dietary preferences</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="icon">💚</div>
+                <h3>Health Benefits</h3>
+                <p>Learn why recipes are healthy and their nutritional value</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="icon">🔄</div>
+                <h3>Substitutions</h3>
+                <p>Get ingredient alternatives for dietary needs</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="icon">📐</div>
+                <h3>Recipe Scaling</h3>
+                <p>Adjust recipes for any number of servings</p>
+            </div>
         </div>
     </div>
+
     <script>
+        // Theme management
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        updateThemeIcon();
+
         function toggleTheme() {
-            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', document.body.dataset.theme);
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
         }
-        document.body.dataset.theme = localStorage.getItem('theme') || 'light';
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            icon.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+        }
     </script>
 </body>
+
 </html>

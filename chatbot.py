@@ -7,7 +7,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import re
 from fuzzywuzzy import fuzz
-from typing import List, Dict
+from typing import List, Dict, Optional, Any
 import bcrypt
 import json
 from datetime import datetime
@@ -16,6 +16,7 @@ import glob
 import spacy
 from sentence_transformers import SentenceTransformer
 from themealdb_client import TheMealDBClient
+from llm_service import llm_service, recipe_scaler, LLMService, RecipeScaler
 
 class Chatbot:
     def __init__(self, csv_path='cuisines.csv'):
@@ -91,11 +92,16 @@ class Chatbot:
         
         # Store current recipe list for numbered requests
         self.current_recipe_list = None
+        self.current_recipe = None  # Store the last shown recipe for follow-ups
         
         # Initialize user data storage
         self.users = {}
         self.comments = {}
         self.ratings = {}
+        
+        # LLM Service for enhanced responses
+        self.llm_service = llm_service
+        self.recipe_scaler = recipe_scaler
         
         # Load existing user data if available
         self._load_user_data()
@@ -391,6 +397,11 @@ class Chatbot:
         if 'help' in original_query or 'what can you do' in original_query:
             return self._get_help_info()
 
+        # Check for follow-up queries about current recipe (health, substitutions, scaling, tips)
+        follow_up_response = self.process_follow_up(user_query, user_name)
+        if follow_up_response:
+            return follow_up_response
+
         # Check for numbered recipe request first (local only)
         number_match = re.search(r'(number|recipe)\s*[#]?\s*(\d+)', original_query)
         if number_match:
@@ -398,6 +409,7 @@ class Chatbot:
                 recipe_number = int(number_match.group(2))
                 if 1 <= recipe_number <= len(self.df):
                     recipe = self.df.iloc[recipe_number - 1]
+                    self.current_recipe = recipe  # Store for follow-up queries
                     return self._format_response(recipe) + '<br><i>(From local recipe database)</i>'
                 else:
                     return f"Sorry, I couldn't find recipe number {recipe_number}. Please try a number between 1 and {len(self.df)}."
@@ -699,3 +711,250 @@ class Chatbot:
         </div>
         """
         return formatted_recipe
+
+    def _format_ingredients(self, ingredients):
+        """Format ingredients as HTML list items."""
+        if pd.isna(ingredients):
+            return "<li>Ingredients not available</li>"
+        
+        if isinstance(ingredients, str):
+            ingredients = ingredients.split(',')
+        
+        return ''.join([f"<li>{ing.strip()}</li>" for ing in ingredients if ing.strip()])
+    
+    def _format_instructions(self, instructions):
+        """Format instructions as HTML list items."""
+        if pd.isna(instructions):
+            return "<li>Instructions not available</li>"
+        
+        if isinstance(instructions, str):
+            instructions = instructions.split('.')
+        
+        return ''.join([f"<li>{step.strip()}</li>" for step in instructions if step.strip()])
+
+    def get_health_explanation(self, recipe: Dict = None) -> str:
+        """Get health explanation for the current or specified recipe."""
+        recipe_data = recipe if recipe is not None else self.current_recipe
+        
+        # Check if we have recipe data (handle None and pandas Series/DataFrame)
+        if recipe_data is None:
+            return "I don't have a recipe selected. Please search for a recipe first!"
+        
+        # Convert pandas Series to dict if needed
+        if hasattr(recipe_data, 'to_dict'):
+            recipe_data = recipe_data.to_dict()
+        
+        explanation = self.llm_service.explain_recipe_health(recipe_data)
+        
+        response = f"""
+        <div class="health-explanation">
+            <div class="icon">🌿</div>
+            <h4>Health Benefits of {recipe_data.get('name', 'this recipe')}:</h4>
+            <p>{explanation}</p>
+        </div>
+        """
+        
+        return response
+    
+    def get_ingredient_substitutions(self, ingredient: str = None) -> str:
+        """Get ingredient substitutions."""
+        if not ingredient and self.current_recipe is not None:
+            # Get substitutions for main ingredients in current recipe
+            recipe_data = self.current_recipe if isinstance(self.current_recipe, dict) else self.current_recipe.to_dict()
+            ingredients = recipe_data.get('ingredients', '')
+            
+            # Find common substitutable ingredients
+            common_substitutes = ['eggs', 'milk', 'butter', 'cream', 'paneer', 'chicken', 'rice', 'sugar', 'flour']
+            found_ingredients = []
+            for sub in common_substitutes:
+                if sub in ingredients.lower():
+                    found_ingredients.append(sub)
+            
+            if not found_ingredients:
+                return "I couldn't find any common ingredients to substitute in this recipe. Ask me about a specific ingredient!"
+            
+            ingredient = found_ingredients[0]  # Use the first found
+        
+        substitutions = self.llm_service.get_ingredient_substitutions(ingredient)
+        
+        response = f"""
+        <div class="substitution-info">
+            <h4>🔄 Substitutions for {ingredient.title()}:</h4>
+            <ul class="substitution-list">
+        """
+        
+        for sub in substitutions:
+            response += f"""
+                <li>
+                    <strong>{sub['name']}</strong> 
+                    <span class="sub-ratio">({sub['ratio']})</span>
+                    <span class="sub-type badge">{sub['type']}</span>
+                </li>
+            """
+        
+        response += """
+            </ul>
+        </div>
+        """
+        
+        return response
+    
+    def scale_recipe(self, target_servings: int = None, query: str = None) -> str:
+        """Scale a recipe to different number of servings."""
+        if self.current_recipe is None:
+            return "Please select a recipe first before scaling!"
+        
+        recipe_data = self.current_recipe if isinstance(self.current_recipe, dict) else self.current_recipe.to_dict()
+        
+        # Try to extract target servings from query
+        if not target_servings and query:
+            target_servings = self.recipe_scaler.extract_servings_from_query(query)
+        
+        if not target_servings:
+            return "How many servings would you like? Try saying 'Make this for 8 people' or 'Scale to 6 servings'."
+        
+        # Assume default 4 servings if not specified
+        original_servings = 4
+        
+        scaled_ingredients = self.recipe_scaler.scale_ingredients(
+            recipe_data.get('ingredients', ''),
+            original_servings,
+            target_servings
+        )
+        
+        response = f"""
+        <div class="scaled-recipe">
+            <h4>📐 {recipe_data.get('name', 'Recipe')} - Scaled for {target_servings} servings:</h4>
+            <p class="scale-info">Original: {original_servings} servings → New: {target_servings} servings</p>
+            <div class="scaled-ingredients">
+                <h5>Adjusted Ingredients:</h5>
+                <ul class="ingredients-list">
+        """
+        
+        for ing in scaled_ingredients.split('\n') if '\n' in scaled_ingredients else scaled_ingredients.split(','):
+            if ing.strip():
+                response += f"<li>{ing.strip()}</li>"
+        
+        response += """
+                </ul>
+            </div>
+        </div>
+        """
+        
+        return response
+    
+    def get_cooking_tips(self) -> str:
+        """Get contextual cooking tips for the current recipe."""
+        if self.current_recipe is None:
+            return "Show me a recipe first, and I'll give you some cooking tips!"
+        
+        recipe_data = self.current_recipe if isinstance(self.current_recipe, dict) else self.current_recipe.to_dict()
+        tips = self.llm_service.generate_cooking_tips(recipe_data)
+        
+        if not tips:
+            return "💡 Read through all instructions before starting to cook!"
+        
+        response = """
+        <div class="cooking-tips">
+            <h4>💡 Pro Tips for This Recipe:</h4>
+            <ul>
+        """
+        
+        for tip in tips:
+            response += f"<li>{tip}</li>"
+        
+        response += """
+            </ul>
+        </div>
+        """
+        
+        return response
+    
+    def get_similar_recipes(self) -> str:
+        """Find recipes similar to the current one."""
+        if self.current_recipe is None:
+            return "Please view a recipe first, then ask for similar recipes!"
+        
+        recipe_data = self.current_recipe if isinstance(self.current_recipe, dict) else self.current_recipe.to_dict()
+        
+        # Use semantic search to find similar recipes
+        query = f"{recipe_data.get('cuisine', '')} {recipe_data.get('course', '')} {recipe_data.get('diet', '')}"
+        top_indices, _ = self.semantic_search(query, top_k=5)
+        
+        similar_recipes = self.df.iloc[top_indices]
+        
+        # Exclude the current recipe if it's in the results
+        if 'name' in recipe_data:
+            similar_recipes = similar_recipes[similar_recipes['name'] != recipe_data['name']]
+        
+        if similar_recipes.empty:
+            return "I couldn't find similar recipes. Try a different search!"
+        
+        self.current_recipe_list = similar_recipes
+        return self._format_recipe_list(similar_recipes.head(5)) + '<br><i>(Similar recipes from local database)</i>'
+    
+    def _build_json_response(self, response_text: str, recipe_data: Dict = None, source: str = None) -> Dict[str, Any]:
+        """Build a structured JSON response for the frontend."""
+        return {
+            'response': response_text,
+            'recipe': recipe_data,
+            'source': source,
+            'suggestions': self._get_follow_up_suggestions(recipe_data),
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _get_follow_up_suggestions(self, recipe_data: Dict = None) -> List[Dict]:
+        """Generate smart follow-up suggestions based on context."""
+        suggestions = []
+        
+        if recipe_data:
+            suggestions = [
+                {'label': 'Want substitutions?', 'icon': '🔄', 'action': 'substitutions'},
+                {'label': 'Similar recipes', 'icon': '👀', 'action': 'similar'},
+                {'label': 'Health benefits', 'icon': '💚', 'action': 'healthy'},
+                {'label': 'Scale recipe', 'icon': '📐', 'action': 'scale'},
+                {'label': 'Cooking tips', 'icon': '💡', 'action': 'tips'},
+            ]
+        else:
+            suggestions = [
+                {'label': 'Show me Indian recipes', 'icon': '🍛', 'query': 'Show me Indian recipes'},
+                {'label': 'Quick breakfast ideas', 'icon': '🌅', 'query': 'Quick breakfast recipes'},
+                {'label': 'Vegetarian dishes', 'icon': '🥗', 'query': 'Vegetarian recipes'},
+                {'label': 'Healthy dinner', 'icon': '🥦', 'query': 'Healthy dinner recipes'},
+            ]
+        
+        return suggestions
+    
+    def process_follow_up(self, query: str, user_name: str = None) -> str:
+        """Process follow-up queries about the current recipe."""
+        query_lower = query.lower()
+        
+        # Health explanation
+        if any(word in query_lower for word in ['healthy', 'health', 'nutritious', 'benefits', 'good for']):
+            return self.get_health_explanation()
+        
+        # Substitutions
+        if any(word in query_lower for word in ['substitut', 'replace', 'instead of', 'alternative']):
+            # Try to extract specific ingredient
+            ingredient_match = re.search(r'(?:substitute|replace|alternative for|instead of)\s+(\w+)', query_lower)
+            ingredient = ingredient_match.group(1) if ingredient_match else None
+            return self.get_ingredient_substitutions(ingredient)
+        
+        # Recipe scaling
+        if any(word in query_lower for word in ['scale', 'servings', 'people', 'portions', 'double', 'half']):
+            if 'double' in query_lower:
+                return self.scale_recipe(target_servings=8)
+            elif 'half' in query_lower:
+                return self.scale_recipe(target_servings=2)
+            else:
+                return self.scale_recipe(query=query)
+        
+        # Similar recipes
+        if any(word in query_lower for word in ['similar', 'like this', 'more like', 'related']):
+            return self.get_similar_recipes()
+        
+        # Cooking tips
+        if any(word in query_lower for word in ['tip', 'tips', 'advice', 'trick']):
+            return self.get_cooking_tips()
+        
+        return None  # Not a follow-up query
